@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP用户管理系统</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#FF7D00',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        info: '#86909C',
+                        light: '#F2F3F5',
+                        dark: '#1D2129',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .hover-scale {
+                transition: transform 0.2s ease-in-out;
+            }
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+            .slide-up {
+                animation: slideUp 0.3s ease-out forwards;
+            }
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .dark .dark\:bg-dark {
+                background-color: #1D2129;
+            }
+            .dark .dark\:bg-darker {
+                background-color: #14171F;
+            }
+            .dark .dark\:text-light {
+                color: #F2F3F5;
+            }
+            .dark .dark\:border-gray-700 {
+                border-color: #2D3239;
+            }
+            
+            /* 暗色主题滚动条 */
+            .dark ::-webkit-scrollbar {
+                width: 8px;
+            }
+            .dark ::-webkit-scrollbar-track {
+                background: #2D3239;
+            }
+            .dark ::-webkit-scrollbar-thumb {
+                background: #4B5563;
+                border-radius: 4px;
+            }
+            .dark ::-webkit-scrollbar-thumb:hover {
+                background: #6B7280;
+            }
+            
+            /* 修复图表显示 */
+            #consumptionChart {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            /* 修复设置选择框箭头 */
+            .select-arrow {
+                pointer-events: none;
+                position: absolute;
+                right: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+            
+            /* 统计模态框高度限制 */
+            .stats-container {
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 dark:bg-darker min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-dark shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa fa-diamond text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-primary">VIP用户管理系统</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative mr-4">
+                        <input type="text" id="globalSearch" placeholder="搜索用户..." class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                        <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <div class="flex items-center ml-4">
+                        <button id="addNewUserBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all">
+                            <i class="fa fa-plus-circle mr-2"></i>
+                            <span>添加用户</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区 -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside class="w-64 bg-white dark:bg-dark shadow-md flex-shrink-0 hidden md:block">
+            <div class="py-6 px-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-light">用户管理</h2>
+                    <div class="flex space-x-2">
+                        <button id="refreshBtn" class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fa fa-refresh text-gray-500 dark:text-gray-300"></i>
+                        </button>
+                        <button id="settingsBtn" class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fa fa-cog text-gray-500 dark:text-gray-300"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 历史记录 -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">最近浏览</h3>
+                        <button id="clearRecentBtn" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">清空</button>
+                    </div>
+                    <div id="recentUsersList" class="space-y-2 max-h-60 overflow-y-auto">
+                        <!-- 动态生成内容 -->
+                    </div>
+                </div>
+                
+                <!-- 常用功能 -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">常用功能</h3>
+                    <div class="space-y-1">
+                        <a href="#" id="allUsersLink" class="flex items-center p-2 rounded-lg bg-primary/5 text-primary common-function-link">
+                            <i class="fa fa-users w-5 h-5 text-center"></i>
+                            <span class="ml-3">所有用户</span>
+                        </a>
+                        <a href="#" id="pinnedUsersLink" class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            <i class="fa fa-star w-5 h-5 text-center"></i>
+                            <span class="ml-3">置顶用户</span>
+                        </a>
+                        <a href="#" id="statsLink" class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            <i class="fa fa-line-chart w-5 h-5 text-center"></i>
+                            <span class="ml-3">消费统计</span>
+                        </a>
+                        <a href="#" id="settingsLink" class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            <i class="fa fa-cog w-5 h-5 text-center"></i>
+                            <span class="ml-3">系统设置</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-darker p-6">
+            <div class="max-w-7xl mx-auto">
+                <!-- 搜索和筛选 -->
+                <div class="bg-white dark:bg-dark rounded-xl p-4 mb-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-light">用户列表</h1>
+                            <p id="userCountText" class="text-gray-500 dark:text-gray-400 mt-1">共找到 0 个 VIP 用户</p>
+                        </div>
+                        <div class="flex justify-end">
+                            <div class="relative">
+                                <select id="filterSelect" class="pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                                    <option value="all">全部用户</option>
+                                    <option value="pinned">置顶用户</option>
+                                    <option value="highBalance">余额大于1000</option>
+                                    <option value="lowBalance">余额小于100</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <i class="fa fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户卡片列表 -->
+                <div id="usersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 动态生成内容 -->
+                </div>
+                
+                <!-- 无用户提示 -->
+                <div id="noUsersMessage" class="hidden py-12 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                        <i class="fa fa-users text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-medium text-gray-900 dark:text-light mb-2">暂无VIP用户</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">点击"添加用户"按钮来创建第一个VIP用户</p>
+                    <button id="addFirstUserBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center mx-auto transition-all">
+                        <i class="fa fa-plus-circle mr-2"></i>
+                        <span>添加用户</span>
+                    </button>
+                </div>
+                
+                <!-- 分页 -->
+                <div id="paginationContainer" class="mt-8 flex items-center justify-between hidden">
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        显示 <span id="showingFrom">1</span> 到 <span id="showingTo">0</span>，共 <span id="totalUsers">0</span> 条
+                    </div>
+                    <div class="flex space-x-1">
+                        <button id="prevPage" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50" disabled>
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <div id="pageNumbers" class="flex">
+                            <!-- 动态生成页码 -->
+                        </div>
+                        <button id="nextPage" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 用户详情模态框 -->
+    <div id="userDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">用户详情</h2>
+                    <button id="closeUserDetailModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <i class="fa fa-user text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 id="detailUserId" class="text-2xl font-bold text-gray-900 dark:text-light">13800138000</h3>
+                            <p id="detailUserTail" class="text-gray-500 dark:text-gray-400">尾号: 8000</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-light dark:bg-gray-700 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-300 mb-2">当前余额</h4>
+                        <p id="detailUserBalance" class="text-3xl font-bold text-primary">¥1,500.00</p>
+                    </div>
+                    <div class="bg-light dark:bg-gray-700 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-300 mb-2">创建日期</h4>
+                        <p id="detailUserCreated" class="text-lg text-gray-800 dark:text-light">2025-01-15</p>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-light mb-4">操作</h3>
+                    <div class="flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
+                        <button id="addAmountBtn" class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
+                            <i class="fa fa-plus-circle mr-2"></i> 添加金额
+                        </button>
+                        <button id="subtractAmountBtn" class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                            <i class="fa fa-minus-circle mr-2"></i> 减少金额
+                        </button>
+                        <button id="togglePinBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg transition-all">
+                            <i class="fa fa-star mr-2"></i> 置顶用户
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-light mb-4">历史记录</h3>
+                    <div id="userHistoryList" class="space-y-4 max-h-64 overflow-y-auto">
+                        <!-- 动态生成内容 -->
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <button id="loadMoreHistoryBtn" class="text-primary hover:text-primary/80 font-medium transition-colors hidden">
+                            查看更多记录 <i class="fa fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加金额模态框 -->
+    <div id="addAmountModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">添加金额</h2>
+                    <button id="closeAddAmountModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="addAmountInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                    <input type="number" id="addAmountInput" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入金额">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="addDescriptionInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
+                    <textarea id="addDescriptionInput" rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入备注信息"></textarea>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="cancelAddAmount" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        取消
+                    </button>
+                    <button id="confirmAddAmount" class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
+                        确认添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 减少金额模态框 -->
+    <div id="subtractAmountModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">减少金额</h2>
+                    <button id="closeSubtractAmountModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="subtractAmountInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                    <input type="number" id="subtractAmountInput" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入金额">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="subtractDescriptionInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
+                    <textarea id="subtractDescriptionInput" rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入备注信息"></textarea>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="cancelSubtractAmount" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        取消
+                    </button>
+                    <button id="confirmSubtractAmount" class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                        确认减少
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div id="addUserModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">添加用户</h2>
+                    <button id="closeAddUserModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4 flex border-b border-gray-200 dark:border-gray-700">
+                    <button id="newUserTab" class="flex-1 py-2 font-medium border-b-2 border-primary text-primary">新用户</button>
+                    <button id="oldUserTab" class="flex-1 py-2 font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent">旧用户</button>
+                </div>
+                
+                <!-- 新用户表单 -->
+                <div id="newUserForm" class="mb-4">
+                    <div class="mb-4">
+                        <label for="newUserPhone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">手机号 (11位)</label>
+                        <input type="text" id="newUserPhone" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入手机号">
+                        <p id="phoneError" class="text-danger text-xs mt-1 hidden">请输入有效的11位手机号</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="newUserInitialAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
+                        <input type="number" id="newUserInitialAmount" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入初始金额" value="0">
+                    </div>
+                </div>
+                
+                <!-- 旧用户表单 -->
+                <div id="oldUserForm" class="mb-4 hidden">
+                    <div class="mb-4">
+                        <label for="oldUserTail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">尾号 (4位数字)</label>
+                        <input type="text" id="oldUserTail" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入4位尾号">
+                        <p id="tailError" class="text-danger text-xs mt-1 hidden">请输入有效的4位尾号</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="oldUserInitialAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
+                        <input type="number" id="oldUserInitialAmount" class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入初始金额" value="0">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="cancelAddUser" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        取消
+                    </button>
+                    <button id="confirmAddUser" class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
+                        确认添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除用户确认模态框 -->
+    <div id="deleteUserModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="text-center mb-4">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-danger/10 mb-4">
+                        <i class="fa fa-exclamation-triangle text-danger text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">确认删除</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">您确定要删除该用户吗？此操作不可撤销。</p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="cancelDeleteUser" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        取消
+                    </button>
+                    <button id="confirmDeleteUser" class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                        确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">系统设置</h2>
+                    <button id="closeSettingsModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="usersPerPage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">每页显示用户数</label>
+                    <div class="relative">
+                        <select id="usersPerPage" class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                            <option value="6">6</option>
+                            <option value="12">12</option>
+                            <option value="24">24</option>
+                            <option value="48">48</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="currencySelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">默认货币</label>
+                    <div class="relative">
+                        <select id="currencySelect" class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                            <option value="CNY">人民币 (CNY)</option>
+                            <option value="USD">美元 (USD)</option>
+                        </select>
+                        <div class="select-arrow">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主题</label>
+                    <div class="flex space-x-2">
+                        <button data-theme="light" class="theme-btn bg-white border border-gray-300 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
+                        <button data-theme="dark" class="theme-btn bg-gray-800 border border-gray-700 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="cancelSettings" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        取消
+                    </button>
+                    <button id="saveSettings" class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
+                        保存设置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消费统计模态框 -->
+    <div id="statsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div class="p-6 stats-container">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">消费统计</h2>
+                    <button id="closeStatsModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex flex-wrap gap-4">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">开始日期</label>
+                            <input type="date" id="startDate" class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                        <div>
+                            <label for="endDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">结束日期</label>
+                            <input type="date" id="endDate" class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        </div>
+                        <div class="self-end">
+                            <button id="updateChartBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                                更新图表
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col lg:flex-row gap-6 mb-6">
+                    <!-- 左侧图表 -->
+                    <div class="w-full lg:w-1/2 h-96">
+                        <canvas id="consumptionChart"></canvas>
+                    </div>
+                    
+                    <!-- 右侧表格 -->
+                    <div class="w-full lg:w-1/2 overflow-x-auto max-h-96">
+                        <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">日期</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">消费金额</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">充值金额</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">净变化</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- 动态生成内容 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button id="closeStatsBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端底部导航 (仅在小屏幕显示) -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark shadow-lg border-t border-gray-200 dark:border-gray-700 py-2 px-4 z-20">
+        <div class="flex justify-around">
+            <a href="#" class="flex flex-col items-center text-primary">
+                <i class="fa fa-users text-lg"></i>
+                <span class="text-xs mt-1">用户</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-500">
+                <i class="fa fa-line-chart text-lg"></i>
+                <span class="text-xs mt-1">统计</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-500">
+                <i class="fa fa-cog text-lg"></i>
+                <span class="text-xs mt-1">设置</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 版权信息 -->
+    <footer class="py-4 text-center text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-dark border-t border-gray-100 dark:border-gray-800">
+        © pfmaxlnx@gmail.com 2019-2025 All rights reserved
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 数据模型
+        class VIPManager {
+            constructor() {
+                this.users = {};
+                this.recentViewed = JSON.parse(localStorage.getItem('recentViewed') || '[]');
+                this.currentUser = null;
+                this.loadData();
+            }
+            
+            // 从localStorage加载数据
+            loadData() {
+                const savedUsers = localStorage.getItem('vipManagerUsers');
+                if (savedUsers) {
+                    this.users = JSON.parse(savedUsers);
+                }
+            }
+            
+            // 保存数据到localStorage
+            saveData() {
+                localStorage.setItem('vipManagerUsers', JSON.stringify(this.users));
+                localStorage.setItem('recentViewed', JSON.stringify(this.recentViewed));
+            }
+            
+            // 获取所有用户
+            getAllUsers() {
+                return Object.values(this.users);
+            }
+            
+            // 获取用户
+            getUser(userId) {
+                return this.users[userId];
+            }
+            
+            // 添加新用户（手机号）
+            addNewUser(phone, initialAmount = 0) {
+                const userId = phone;
+                
+                if (this.users[userId]) {
+                    return false;
+                }
+                
+                const newUser = {
+                    id: userId,
+                    phone: phone,
+                    tail: phone.slice(-4),
+                    amount: parseFloat(initialAmount),
+                    pinned: false,
+                    history: [
+                        {
+                            type: 'add',
+                            amount: parseFloat(initialAmount),
+                            date: new Date().toISOString(),
+                            description: '初始充值'
+                        }
+                    ],
+                    created: new Date().toISOString()
+                };
+                
+                this.users[userId] = newUser;
+                this.saveData();
+                return true;
+            }
+            
+            // 添加旧用户（尾号）
+            addOldUser(tail, initialAmount = 0) {
+                const userId = 'old-' + tail;
+                
+                if (this.users[userId]) {
+                    return false;
+                }
+                
+                const newUser = {
+                    id: userId,
+                    phone: '0000000' + tail,
+                    tail: tail,
+                    amount: parseFloat(initialAmount),
+                    pinned: false,
+                    history: [
+                        {
+                            type: 'add',
+                            amount: parseFloat(initialAmount),
+                            date: new Date().toISOString(),
+                            description: '初始充值'
+                        }
+                    ],
+                    created: new Date().toISOString()
+                };
+                
+                this.users[userId] = newUser;
+                this.saveData();
+                return true;
+            }
+            
+            // 删除用户
+            deleteUser(userId) {
+                if (this.users[userId]) {
+                    delete this.users[userId];
+                    this.saveData();
+                    return true;
+                }
+                return false;
+            }
+            
+            // 添加金额
+            addAmount(userId, amount, description = '') {
+                const user = this.users[userId];
+                if (user) {
+                    user.amount += parseFloat(amount);
+                    user.history.unshift({
+                        type: 'add',
+                        amount: parseFloat(amount),
+                        date: new Date().toISOString(),
+                        description: description || `充值${amount}元`
+                    });
+                    this.saveData();
+                    return true;
+                }
+                return false;
+            }
+            
+            // 减少金额
+            subtractAmount(userId, amount, description = '') {
+                const user = this.users[userId];
+                if (user && user.amount >= parseFloat(amount)) {
+                    user.amount -= parseFloat(amount);
+                    user.history.unshift({
+                        type: 'subtract',
+                        amount: parseFloat(amount),
+                        date: new Date().toISOString(),
+                        description: description || `消费${amount}元`
+                    });
+                    this.saveData();
+                    return true;
+                }
+                return false;
+            }
+            
+            // 切换用户置顶状态
+            togglePin(userId) {
+                const user = this.users[userId];
+                if (user) {
+                    user.pinned = !user.pinned;
+                    this.saveData();
+                    return user.pinned;
+                }
+                return false;
+            }
+            
+            // 搜索用户
+            searchUsers(query) {
+                if (!query) {
+                    return this.getAllUsers();
+                }
+                
+                query = query.toLowerCase();
+                return this.getAllUsers().filter(user => 
+                    user.phone.includes(query) || 
+                    user.tail.includes(query) || 
+                    user.id.includes(query)
+                );
+            }
+            
+            // 筛选用户
+            filterUsers(filterType) {
+                switch(filterType) {
+                    case 'pinned':
+                        return this.getAllUsers().filter(user => user.pinned);
+                    case 'highBalance':
+                        return this.getAllUsers().filter(user => user.amount > 1000);
+                    case 'lowBalance':
+                        return this.getAllUsers().filter(user => user.amount < 100);
+                    default:
+                        return this.getAllUsers();
+                }
+            }
+            
+            // 添加最近浏览
+            addRecentView(userId) {
+                // 移除重复项
+                this.recentViewed = this.recentViewed.filter(id => id !== userId);
+                // 添加到开头
+                this.recentViewed.unshift(userId);
+                // 限制最多5条
+                this.recentViewed = this.recentViewed.slice(0, 5);
+                this.saveData();
+            }
+            
+            // 获取最近浏览的用户
+            getRecentUsers() {
+                return this.recentViewed
+                    .map(id => this.getUser(id))
+                    .filter(user => user !== undefined);
+            }
+            
+            // 获取指定时间段的消费数据
+            getConsumptionData(startDate, endDate) {
+                const consumptionData = [];
+                const allUsers = this.getAllUsers();
+                
+                // 初始化日期范围内的数据
+                const dateRange = [];
+                const currentDate = new Date(startDate);
+                while (currentDate <= endDate) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    consumptionData.push({
+                        date: dateStr,
+                        consumption: 0,
+                        recharge: 0,
+                        netChange: 0
+                    });
+                    dateRange.push(dateStr);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                // 处理所有用户的历史记录
+                allUsers.forEach(user => {
+                    user.history.forEach(record => {
+                        const recordDate = new Date(record.date);
+                        const dateStr = recordDate.toISOString().split('T')[0];
+                        
+                        if (dateRange.includes(dateStr)) {
+                            const index = dateRange.indexOf(dateStr);
+                            if (record.type === 'subtract') {
+                                consumptionData[index].consumption += record.amount;
+                                consumptionData[index].netChange -= record.amount;
+                            } else {
+                                consumptionData[index].recharge += record.amount;
+                                consumptionData[index].netChange += record.amount;
+                            }
+                        }
+                    });
+                });
+                
+                return consumptionData;
+            }
+        }
+
+        // 格式化金额（带货币换算）
+        function formatAmount(amount) {
+            const currency = localStorage.getItem('currency') || 'CNY';
+            const exchangeRate = currency === 'USD' ? 0.14 : 1; // 1 CNY = 0.14 USD
+            const convertedAmount = amount * exchangeRate;
+            const symbol = currency === 'USD' ? '$' : '¥';
+            return symbol + convertedAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN') + ' ' + 
+                   date.toTimeString().substring(0, 5);
+        }
+
+        // 应用实例
+        const vipManager = new VIPManager();
+        let currentUserId = null;
+        let currentPage = 1;
+        let usersPerPage = 6;
+        let filteredUsers = [];
+        let activeFilter = 'all';
+        let searchQuery = '';
+        
+        // 消费统计图表实例
+        let consumptionChart = null;
+
+        // DOM元素
+        const usersContainer = document.getElementById('usersContainer');
+        const userCountText = document.getElementById('userCountText');
+        const noUsersMessage = document.getElementById('noUsersMessage');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const showingFrom = document.getElementById('showingFrom');
+        const showingTo = document.getElementById('showingTo');
+        const totalUsers = document.getElementById('totalUsers');
+        const pageNumbers = document.getElementById('pageNumbers');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const recentUsersList = document.getElementById('recentUsersList');
+        const filterSelect = document.getElementById('filterSelect');
+        const globalSearch = document.getElementById('globalSearch');
+
+        // 模态框
+        const userDetailModal = document.getElementById('userDetailModal');
+        const addAmountModal = document.getElementById('addAmountModal');
+        const subtractAmountModal = document.getElementById('subtractAmountModal');
+        const addUserModal = document.getElementById('addUserModal');
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        const settingsModal = document.getElementById('settingsModal');
+        const statsModal = document.getElementById('statsModal');
+
+        // 渲染用户列表
+        function renderUserList() {
+            // 应用筛选和搜索
+            let users = vipManager.getAllUsers();
+            
+            if (activeFilter !== 'all') {
+                users = vipManager.filterUsers(activeFilter);
+            }
+            
+            if (searchQuery) {
+                users = vipManager.searchUsers(searchQuery);
+            }
+            
+            filteredUsers = users;
+            
+            // 更新用户计数
+            userCountText.textContent = `共找到 ${filteredUsers.length} 个 VIP 用户`;
+            
+            // 显示或隐藏无用户消息
+            if (filteredUsers.length === 0) {
+                usersContainer.innerHTML = '';
+                noUsersMessage.classList.remove('hidden');
+                paginationContainer.classList.add('hidden');
+                return;
+            } else {
+                noUsersMessage.classList.add('hidden');
+            }
+            
+            // 计算分页
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            currentPage = Math.min(currentPage, totalPages);
+            
+            // 显示或隐藏分页控件
+            if (filteredUsers.length <= usersPerPage) {
+                paginationContainer.classList.add('hidden');
+            } else {
+                paginationContainer.classList.remove('hidden');
+            }
+            
+            // 更新分页信息
+            const startIdx = (currentPage - 1) * usersPerPage;
+            const endIdx = Math.min(startIdx + usersPerPage, filteredUsers.length);
+            
+            showingFrom.textContent = startIdx + 1;
+            showingTo.textContent = endIdx;
+            totalUsers.textContent = filteredUsers.length;
+            
+            // 生成页码
+            pageNumbers.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `w-10 h-10 flex items-center justify-center rounded-lg ${
+                    i === currentPage ? 'bg-primary text-white' : 'border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderUserList();
+                });
+                pageNumbers.appendChild(pageBtn);
+            }
+            
+            // 更新上一页/下一页按钮状态
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+            
+            // 渲染当前页的用户
+            usersContainer.innerHTML = '';
+            const currentPageUsers = filteredUsers.slice(startIdx, endIdx);
+            
+            currentPageUsers.forEach(user => {
+                const card = createUserCard(user);
+                usersContainer.appendChild(card);
+            });
+        }
+
+        // 创建用户卡片
+        function createUserCard(user) {
+            const card = document.createElement('div');
+            card.className = 'bg-white dark:bg-dark rounded-xl overflow-hidden shadow-sm hover-scale card-shadow slide-up';
+            
+            const pinIcon = user.pinned ? 
+                '<i class="fa fa-star text-yellow-400"></i>' : 
+                '<i class="fa fa-star-o text-gray-400"></i>';
+            
+            card.innerHTML = `
+                <div class="p-5">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-light">${user.phone}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">尾号: ${user.tail}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors toggle-pin-btn" data-user-id="${user.id}">
+                                ${pinIcon}
+                            </button>
+                            <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-300 transition-colors options-btn" data-user-id="${user.id}">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">当前余额</span>
+                            <span class="text-xl font-bold text-primary">${formatAmount(user.amount)}</span>
+                        </div>
+                        
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-success hover:bg-success/90 text-white py-2 rounded-lg transition-all add-amount-btn" data-user-id="${user.id}">
+                                <i class="fa fa-plus mr-1"></i> 充值
+                            </button>
+                            <button class="flex-1 bg-danger hover:bg-danger/90 text-white py-2 rounded-lg transition-all subtract-amount-btn" data-user-id="${user.id}">
+                                <i class="fa fa-minus mr-1"></i> 消费
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">最近操作</h4>
+                        <div class="space-y-2">
+                            ${user.history.slice(0, 2).map(record => `
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 rounded-full ${record.type === 'add' ? 'bg-success' : 'bg-danger'} mr-2"></div>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">${record.description}</span>
+                                    <span class="text-xs text-gray-400 ml-auto">${formatDate(record.date)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加点击事件
+            card.addEventListener('click', (e) => {
+                // 如果点击的是按钮，不触发详情页
+                if (e.target.closest('button')) return;
+                
+                currentUserId = user.id;
+                openUserDetail(user.id);
+            });
+            
+            // 添加充值按钮事件
+            card.querySelector('.add-amount-btn').addEventListener('click', () => {
+                currentUserId = user.id;
+                openAddAmountModal();
+            });
+            
+            // 添加消费按钮事件
+            card.querySelector('.subtract-amount-btn').addEventListener('click', () => {
+                currentUserId = user.id;
+                openSubtractAmountModal();
+            });
+            
+            // 添加置顶按钮事件
+            card.querySelector('.toggle-pin-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止冒泡到卡片
+                toggleUserPin(user.id);
+            });
+            
+            // 添加选项按钮事件
+            card.querySelector('.options-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止冒泡到卡片
+                currentUserId = user.id;
+                openDeleteUserModal();
+            });
+            
+            return card;
+        }
+
+        // 打开用户详情
+        function openUserDetail(userId) {
+            const user = vipManager.getUser(userId);
+            if (!user) return;
+            
+            // 添加到最近浏览
+            vipManager.addRecentView(userId);
+            renderRecentUsers();
+            
+            // 更新详情页内容
+            document.getElementById('detailUserId').textContent = user.phone;
+            document.getElementById('detailUserTail').textContent = `尾号: ${user.tail}`;
+            document.getElementById('detailUserBalance').textContent = formatAmount(user.amount);
+            document.getElementById('detailUserCreated').textContent = formatDate(user.created);
+            
+            // 更新历史记录
+            const historyList = document.getElementById('userHistoryList');
+            historyList.innerHTML = '';
+            
+            user.history.slice(0, 5).forEach(record => {
+                const item = document.createElement('div');
+                item.className = 'bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 p-4 shadow-sm';
+                
+                const iconClass = record.type === 'add' ? 
+                    'bg-success/10 text-success' : 
+                    'bg-danger/10 text-danger';
+                
+                const icon = record.type === 'add' ? 'plus' : 'minus';
+                
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full ${iconClass} flex items-center justify-center mr-3">
+                                <i class="fa fa-${icon}"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-light">${record.description}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">${formatDate(record.date)}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-400">操作人: 管理员</span>
+                    </div>
+                `;
+                
+                historyList.appendChild(item);
+            });
+            
+            // 显示或隐藏"查看更多"按钮
+            const loadMoreBtn = document.getElementById('loadMoreHistoryBtn');
+            if (user.history.length > 5) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
+            
+            // 更新操作按钮状态
+            const togglePinBtn = document.getElementById('togglePinBtn');
+            if (user.pinned) {
+                togglePinBtn.innerHTML = '<i class="fa fa-star mr-2"></i> 取消置顶';
+            } else {
+                togglePinBtn.innerHTML = '<i class="fa fa-star mr-2"></i> 置顶用户';
+            }
+            
+            // 打开模态框
+            userDetailModal.classList.remove('hidden');
+        }
+
+        // 渲染最近浏览的用户
+        function renderRecentUsers() {
+            const recentUsers = vipManager.getRecentUsers();
+            recentUsersList.innerHTML = '';
+            
+            if (recentUsers.length === 0) {
+                recentUsersList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-sm">暂无浏览记录</p>';
+                return;
+            }
+            
+            recentUsers.forEach(user => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors';
+                item.innerHTML = `
+                    <div class="w-8 h-8 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700 dark:text-light">${user.phone}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">余额: ${formatAmount(user.amount)}</p>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    currentUserId = user.id;
+                    openUserDetail(user.id);
+                });
+                
+                recentUsersList.appendChild(item);
+            });
+        }
+
+        // 打开添加金额模态框
+        function openAddAmountModal() {
+            document.getElementById('addAmountInput').value = '';
+            document.getElementById('addDescriptionInput').value = '';
+            addAmountModal.classList.remove('hidden');
+        }
+
+        // 打开减少金额模态框
+        function openSubtractAmountModal() {
+            document.getElementById('subtractAmountInput').value = '';
+            document.getElementById('subtractDescriptionInput').value = '';
+            subtractAmountModal.classList.remove('hidden');
+        }
+
+        // 打开添加用户模态框
+        function openAddUserModal() {
+            document.getElementById('newUserPhone').value = '';
+            document.getElementById('oldUserTail').value = '';
+            document.getElementById('newUserInitialAmount').value = '0';
+            document.getElementById('oldUserInitialAmount').value = '0';
+            document.getElementById('phoneError').classList.add('hidden');
+            document.getElementById('tailError').classList.add('hidden');
+            
+            // 默认显示新用户表单
+            document.getElementById('newUserForm').classList.remove('hidden');
+            document.getElementById('oldUserForm').classList.add('hidden');
+            document.getElementById('newUserTab').classList.add('border-primary', 'text-primary');
+            document.getElementById('oldUserTab').classList.add('border-transparent');
+            document.getElementById('oldUserTab').classList.remove('border-primary', 'text-primary');
+            
+            addUserModal.classList.remove('hidden');
+        }
+        
+        // 打开删除用户模态框
+        function openDeleteUserModal() {
+            deleteUserModal.classList.remove('hidden');
+        }
+        
+        // 打开设置模态框
+        function openSettingsModal() {
+            // 加载保存的设置
+            const savedUsersPerPage = localStorage.getItem('usersPerPage');
+            if (savedUsersPerPage) {
+                document.getElementById('usersPerPage').value = savedUsersPerPage;
+            } else {
+                document.getElementById('usersPerPage').value = usersPerPage;
+            }
+            
+            // 加载货币设置
+            const currency = localStorage.getItem('currency') || 'CNY';
+            document.getElementById('currencySelect').value = currency;
+            
+            // 加载主题设置
+            const theme = localStorage.getItem('theme') || 'light';
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-primary');
+            });
+            document.querySelector(`.theme-btn[data-theme="${theme}"]`).classList.add('ring-2', 'ring-primary');
+            
+            settingsModal.classList.remove('hidden');
+        }
+        
+        // 打开统计模态框
+        function openStatsModal() {
+            statsModal.classList.remove('hidden');
+            
+            // 设置默认日期范围（最近7天）
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 7);
+            
+            document.getElementById('startDate').valueAsDate = startDate;
+            document.getElementById('endDate').valueAsDate = endDate;
+            
+            // 延迟绘制图表，确保模态框已完全显示
+            setTimeout(() => {
+                drawConsumptionChart(startDate, endDate);
+            }, 50);
+        }
+        
+        // 绘制消费统计图表
+        function drawConsumptionChart(startDate, endDate) {
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            const consumptionData = vipManager.getConsumptionData(startDate, endDate);
+            
+            // 销毁现有图表（如果存在）
+            if (consumptionChart) {
+                consumptionChart.destroy();
+            }
+            
+            // 创建新图表
+            consumptionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: consumptionData.map(item => item.date),
+                    datasets: [
+                        {
+                            label: '消费金额',
+                            data: consumptionData.map(item => item.consumption),
+                            backgroundColor: '#F53F3F',
+                            borderColor: '#F53F3F',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '充值金额',
+                            data: consumptionData.map(item => item.recharge),
+                            backgroundColor: '#00B42A',
+                            borderColor: '#00B42A',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatAmount(value);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatAmount(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 强制更新图表尺寸
+            setTimeout(() => {
+                if (consumptionChart) {
+                    consumptionChart.update();
+                }
+            }, 100);
+            
+            // 更新表格数据
+            const tableBody = document.getElementById('statsTableBody');
+            tableBody.innerHTML = '';
+            
+            consumptionData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${item.date}</td>
+                    <td class="py-3 px-4 text-sm text-right text-danger">${formatAmount(item.consumption)}</td>
+                    <td class="py-3 px-4 text-sm text-right text-success">${formatAmount(item.recharge)}</td>
+                    <td class="py-3 px-4 text-sm text-right font-medium ${item.netChange >= 0 ? 'text-success' : 'text-danger'}">
+                        ${item.netChange >= 0 ? '+' : ''}${formatAmount(item.netChange)}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 切换用户置顶状态
+        function toggleUserPin(userId) {
+            vipManager.togglePin(userId);
+            renderUserList();
+            renderRecentUsers();
+            
+            // 如果当前打开了用户详情页，更新按钮状态
+            if (currentUserId === userId && !userDetailModal.classList.contains('hidden')) {
+                const user = vipManager.getUser(userId);
+                const togglePinBtn = document.getElementById('togglePinBtn');
+                if (user.pinned) {
+                    togglePinBtn.innerHTML = '<i class="fa fa-star mr-2"></i> 取消置顶';
+                } else {
+                    togglePinBtn.innerHTML = '<i class="fa fa-star mr-2"></i> 置顶用户';
+                }
+            }
+        }
+
+        // 应用主题设置
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化用户列表和最近浏览
+            renderUserList();
+            renderRecentUsers();
+            
+            // 加载保存的每页用户数设置
+            const savedUsersPerPage = localStorage.getItem('usersPerPage');
+            if (savedUsersPerPage) {
+                usersPerPage = parseInt(savedUsersPerPage);
+            }
+            
+            // 加载货币设置
+            const currency = localStorage.getItem('currency') || 'CNY';
+            localStorage.setItem('currency', currency);
+            
+            // 加载主题设置
+            const theme = localStorage.getItem('theme') || 'light';
+            applyTheme(theme);
+            localStorage.setItem('theme', theme);
+
+            // 关闭模态框事件
+            document.getElementById('closeUserDetailModal').addEventListener('click', () => {
+                userDetailModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeAddAmountModal').addEventListener('click', () => {
+                addAmountModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeSubtractAmountModal').addEventListener('click', () => {
+                subtractAmountModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeAddUserModal').addEventListener('click', () => {
+                addUserModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeSettingsModal').addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeStatsModal').addEventListener('click', () => {
+                statsModal.classList.add('hidden');
+            });
+            
+            document.getElementById('closeStatsBtn').addEventListener('click', () => {
+                statsModal.classList.add('hidden');
+            });
+            
+            // 取消按钮事件
+            document.getElementById('cancelAddAmount').addEventListener('click', () => {
+                addAmountModal.classList.add('hidden');
+            });
+            
+            document.getElementById('cancelSubtractAmount').addEventListener('click', () => {
+                subtractAmountModal.classList.add('hidden');
+            });
+            
+            document.getElementById('cancelAddUser').addEventListener('click', () => {
+                addUserModal.classList.add('hidden');
+            });
+            
+            document.getElementById('cancelDeleteUser').addEventListener('click', () => {
+                deleteUserModal.classList.add('hidden');
+            });
+            
+            document.getElementById('cancelSettings').addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+            
+            // 添加用户按钮
+            document.getElementById('addNewUserBtn').addEventListener('click', openAddUserModal);
+            document.getElementById('addFirstUserBtn').addEventListener('click', openAddUserModal);
+            
+            // 添加用户选项卡切换
+            document.getElementById('newUserTab').addEventListener('click', function() {
+                document.getElementById('newUserForm').classList.remove('hidden');
+                document.getElementById('oldUserForm').classList.add('hidden');
+                this.classList.remove('border-transparent');
+                this.classList.add('border-primary', 'text-primary');
+                document.getElementById('oldUserTab').classList.add('border-transparent');
+                document.getElementById('oldUserTab').classList.remove('border-primary', 'text-primary');
+            });
+            
+            document.getElementById('oldUserTab').addEventListener('click', function() {
+                document.getElementById('oldUserForm').classList.remove('hidden');
+                document.getElementById('newUserForm').classList.add('hidden');
+                this.classList.remove('border-transparent');
+                this.classList.add('border-primary', 'text-primary');
+                document.getElementById('newUserTab').classList.add('border-transparent');
+                document.getElementById('newUserTab').classList.remove('border-primary', 'text-primary');
+            });
+            
+            // 确认添加用户
+            document.getElementById('confirmAddUser').addEventListener('click', () => {
+                const isNewUser = !document.getElementById('oldUserForm').classList.contains('hidden');
+                
+                if (isNewUser) {
+                    // 添加旧用户
+                    const tail = document.getElementById('oldUserTail').value.trim();
+                    const initialAmount = document.getElementById('oldUserInitialAmount').value.trim() || '0';
+                    
+                    // 验证尾号
+                    const tailRegex = /^\d{4}$/;
+                    if (!tailRegex.test(tail)) {
+                        document.getElementById('tailError').classList.remove('hidden');
+                        return;
+                    }
+                    
+                    document.getElementById('tailError').classList.add('hidden');
+                    
+                    // 添加用户
+                    if (vipManager.addOldUser(tail, initialAmount)) {
+                        addUserModal.classList.add('hidden');
+                        renderUserList();
+                        renderRecentUsers();
+                        alert('旧用户添加成功！');
+                    } else {
+                        alert('该用户已存在！');
+                    }
+                } else {
+                    // 添加新用户
+                    const phone = document.getElementById('newUserPhone').value.trim();
+                    const initialAmount = document.getElementById('newUserInitialAmount').value.trim() || '0';
+                    
+                    // 验证手机号
+                    const phoneRegex = /^\d{11}$/;
+                    if (!phoneRegex.test(phone)) {
+                        document.getElementById('phoneError').classList.remove('hidden');
+                        return;
+                    }
+                    
+                    document.getElementById('phoneError').classList.add('hidden');
+                    
+                    // 添加用户
+                    if (vipManager.addNewUser(phone, initialAmount)) {
+                        addUserModal.classList.add('hidden');
+                        renderUserList();
+                        renderRecentUsers();
+                        alert('新用户添加成功！');
+                    } else {
+                        alert('该用户已存在！');
+                    }
+                }
+            });
+            
+            // 确认添加金额
+            document.getElementById('confirmAddAmount').addEventListener('click', () => {
+                const amount = document.getElementById('addAmountInput').value.trim();
+                const description = document.getElementById('addDescriptionInput').value.trim();
+                
+                if (!amount || parseFloat(amount) <= 0) {
+                    alert('请输入有效的金额！');
+                    return;
+                }
+                
+                if (vipManager.addAmount(currentUserId, amount, description)) {
+                    addAmountModal.classList.add('hidden');
+                    renderUserList();
+                    renderRecentUsers();
+                    
+                    // 更新详情页
+                    if (!userDetailModal.classList.contains('hidden')) {
+                        openUserDetail(currentUserId);
+                    }
+                    
+                    alert('金额添加成功！');
+                } else {
+                    alert('操作失败，请重试！');
+                }
+            });
+            
+            // 确认减少金额
+            document.getElementById('confirmSubtractAmount').addEventListener('click', () => {
+                const amount = document.getElementById('subtractAmountInput').value.trim();
+                const description = document.getElementById('subtractDescriptionInput').value.trim();
+                
+                if (!amount || parseFloat(amount) <= 0) {
+                    alert('请输入有效的金额！');
+                    return;
+                }
+                
+                const user = vipManager.getUser(currentUserId);
+                if (parseFloat(amount) > user.amount) {
+                    alert('减少的金额不能大于当前余额！');
+                    return;
+                }
+                
+                if (vipManager.subtractAmount(currentUserId, amount, description)) {
+                    subtractAmountModal.classList.add('hidden');
+                    renderUserList();
+                    renderRecentUsers();
+                    
+                    // 更新详情页
+                    if (!userDetailModal.classList.contains('hidden')) {
+                        openUserDetail(currentUserId);
+                    }
+                    
+                    alert('金额减少成功！');
+                } else {
+                    alert('操作失败，请重试！');
+                }
+            });
+            
+            // 确认删除用户
+            document.getElementById('confirmDeleteUser').addEventListener('click', () => {
+                if (vipManager.deleteUser(currentUserId)) {
+                    deleteUserModal.classList.add('hidden');
+                    renderUserList();
+                    renderRecentUsers();
+                    
+                    // 如果删除的是当前打开的用户，关闭详情页
+                    if (!userDetailModal.classList.contains('hidden')) {
+                        userDetailModal.classList.add('hidden');
+                    }
+                    
+                    alert('用户删除成功！');
+                } else {
+                    alert('操作失败，请重试！');
+                }
+            });
+            
+            // 切换置顶状态
+            document.getElementById('togglePinBtn').addEventListener('click', () => {
+                if (currentUserId) {
+                    toggleUserPin(currentUserId);
+                }
+            });
+            
+            // 添加金额按钮
+            document.getElementById('addAmountBtn').addEventListener('click', () => {
+                if (currentUserId) {
+                    openAddAmountModal();
+                }
+            });
+            
+            // 减少金额按钮
+            document.getElementById('subtractAmountBtn').addEventListener('click', () => {
+                if (currentUserId) {
+                    openSubtractAmountModal();
+                }
+            });
+            
+            // 筛选用户
+            filterSelect.addEventListener('change', () => {
+                activeFilter = filterSelect.value;
+                currentPage = 1;
+                renderUserList();
+            });
+            
+            // 全局搜索
+            globalSearch.addEventListener('input', () => {
+                searchQuery = globalSearch.value.trim();
+                currentPage = 1;
+                renderUserList();
+            });
+            
+            // 分页控制
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderUserList();
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderUserList();
+                }
+            });
+            
+            // 刷新按钮
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                vipManager.loadData();
+                renderUserList();
+                renderRecentUsers();
+            });
+            
+            // 查看更多历史记录
+            document.getElementById('loadMoreHistoryBtn').addEventListener('click', () => {
+                const user = vipManager.getUser(currentUserId);
+                if (!user) return;
+                
+                const historyList = document.getElementById('userHistoryList');
+                historyList.innerHTML = '';
+                
+                user.history.forEach(record => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 p-4 shadow-sm';
+                    
+                    const iconClass = record.type === 'add' ? 
+                        'bg-success/10 text-success' : 
+                        'bg-danger/10 text-danger';
+                    
+                    const icon = record.type === 'add' ? 'plus' : 'minus';
+                    
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full ${iconClass} flex items-center justify-center mr-3">
+                                    <i class="fa fa-${icon}"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-light">${record.description}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formatDate(record.date)}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-gray-400">操作人: 管理员</span>
+                        </div>
+                    `;
+                    
+                    historyList.appendChild(item);
+                });
+                
+                document.getElementById('loadMoreHistoryBtn').classList.add('hidden');
+            });
+            
+            // 设置按钮事件
+            document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+            
+            // 常用功能区系统设置链接事件
+            document.getElementById('settingsLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                openSettingsModal();
+            });
+            
+            // 保存设置
+            document.getElementById('saveSettings').addEventListener('click', () => {
+                const newUsersPerPage = parseInt(document.getElementById('usersPerPage').value);
+                usersPerPage = newUsersPerPage;
+                localStorage.setItem('usersPerPage', newUsersPerPage);
+                
+                const currency = document.getElementById('currencySelect').value;
+                localStorage.setItem('currency', currency);
+                
+                // 重新渲染用户列表
+                currentPage = 1;
+                renderUserList();
+                
+                settingsModal.classList.add('hidden');
+                alert('设置已保存！');
+            });
+            
+            // 主题按钮事件
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const theme = this.getAttribute('data-theme');
+                    localStorage.setItem('theme', theme);
+                    applyTheme(theme);
+                    
+                    // 更新按钮选中状态
+                    document.querySelectorAll('.theme-btn').forEach(b => {
+                        b.classList.remove('ring-2', 'ring-primary');
+                    });
+                    this.classList.add('ring-2', 'ring-primary');
+                });
+            });
+            
+            // 常用功能区事件
+            document.getElementById('pinnedUsersLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                activeFilter = 'pinned';
+                currentPage = 1;
+                renderUserList();
+                
+                // 更新激活状态
+                document.querySelectorAll('.common-function-link').forEach(link => {
+                    link.classList.remove('bg-primary/5', 'text-primary');
+                    link.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+                e.target.closest('.common-function-link').classList.add('bg-primary/5', 'text-primary');
+                e.target.closest('.common-function-link').classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            
+            // 所有用户
+            document.getElementById('allUsersLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                activeFilter = 'all';
+                currentPage = 1;
+                renderUserList();
+                
+                // 更新激活状态
+                document.querySelectorAll('.common-function-link').forEach(link => {
+                    link.classList.remove('bg-primary/5', 'text-primary');
+                    link.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                });
+                e.target.closest('.common-function-link').classList.add('bg-primary/5', 'text-primary');
+                e.target.closest('.common-function-link').classList.remove('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            
+            // 统计按钮事件
+            document.getElementById('statsLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                openStatsModal();
+            });
+            
+            // 更新图表按钮
+            document.getElementById('updateChartBtn').addEventListener('click', () => {
+                const startDate = new Date(document.getElementById('startDate').value);
+                const endDate = new Date(document.getElementById('endDate').value);
+                
+                if (startDate > endDate) {
+                    alert('开始日期不能晚于结束日期！');
+                    return;
+                }
+                
+                drawConsumptionChart(startDate, endDate);
+            });
+            
+            // 清空最近浏览记录
+            document.getElementById('clearRecentBtn').addEventListener('click', function() {
+                vipManager.recentViewed = [];
+                vipManager.saveData();
+                renderRecentUsers();
+            });
+        });
+    </script>
+</body>
+</html>
