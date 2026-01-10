@@ -12,6 +12,9 @@
     <!-- 引入Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://npmcdn.com/dexie/dist/dexie.min.js"></script>
+
     <!-- 配置Tailwind自定义颜色和字体 -->
     <script>
         window.alert = function () {
@@ -174,30 +177,145 @@
     </style>
 </head>
 
-<body class="font-inter bg-gray-50 dark:bg-darker min-h-screen flex flex-col">
+<body class="font-inter bg-gray-50 dark:bg-darker min-h-screen flex flex-col overflow-x-hidden">
+    <!-- 登录 / Supabase 配置遮罩层 -->
+    <div id="authOverlay" class="fixed inset-0 z-[999] bg-black/60 hidden items-center justify-center">
+        <div class="bg-white dark:bg-dark w-full max-w-lg rounded-2xl shadow-2xl p-6 mx-4">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-light">登录以启用多用户与云端同步</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">离线优先：登录一次后可离线使用（会在恢复网络后同步）。</p>
+                </div>
+                <button id="authOverlayClose" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="关闭">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="mt-5 space-y-4">
+                <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-light">Supabase 项目配置</h3>
+                        <span id="sbConfigBadge" class="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">未配置</span>
+                    </div>
+                    <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">Project URL</label>
+                    <input id="sbUrlInput" type="text" placeholder="https://xxxxx.supabase.co"
+                           class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+
+                    <label class="block text-xs text-gray-600 dark:text-gray-300 mt-3 mb-1">Anon Key（publishable）</label>
+                    <textarea id="sbAnonInput" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                              class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none"></textarea>
+
+
+                    <div class="mt-3 space-y-2">
+                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
+                            <input id="autoPullEnabled" type="checkbox" checked
+                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                            <span>自动拉取云端更新</span>
+                        </label>
+
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-600 dark:text-gray-400 w-20">拉取间隔</span>
+                            <div class="relative flex-1">
+                                <select id="autoPullInterval"
+                                        class="w-full pl-3 pr-10 py-2 rounded-lg bg-gray-50 dark:bg-dark/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-light focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                                    <option value="10">10 秒</option>
+                                    <option value="30" selected>30 秒</option>
+                                    <option value="60">60 秒</option>
+                                    <option value="180">3 分钟</option>
+                                </select>
+                                <div class="select-arrow">
+                                    <i class="fa fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
+                            <input id="pullOnFocus" type="checkbox" checked
+                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                            <span>切回页面自动拉取</span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
+                            <input id="realtimeEnabled" type="checkbox"
+                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                            <span>Realtime 实时监听（需要在 Supabase 打开 replication）</span>
+                        </label>
+
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            建议：未添加 <span class="font-mono">op_ts</span> 列时会回退“全量拉取”，可把拉取间隔调大。
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-3 mt-3">
+                        <button id="sbSaveConfigBtn" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg transition-all">
+                            <i class="fa fa-save mr-2"></i>保存配置
+                        </button>
+                        <button id="sbClearConfigBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2.5 rounded-lg transition-all">
+                            清除
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">配置项将保存在本机浏览器中（localStorage）。Anon Key 可公开使用，但不要把 Service Role Key 放到前端。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">邮箱</label>
+                        <input id="authEmail" type="email" placeholder="you@example.com"
+                               class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">密码</label>
+                        <input id="authPassword" type="password" placeholder="••••••••"
+                               class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button id="signInBtn" class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
+                        <i class="fa fa-sign-in mr-2"></i>登录
+                    </button>
+                    <button id="signUpBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2.5 rounded-lg transition-all">
+                        <i class="fa fa-user-plus mr-2"></i>注册
+                    </button>
+                </div>
+
+                <p id="authMsg" class="text-sm text-red-600 dark:text-red-400 hidden"></p>
+
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div>提示：</div>
+                    <ul class="list-disc ml-5 mt-1 space-y-1">
+                        <li>如果你在 Supabase 开启了邮箱验证，注册后需要先去邮箱点确认链接。</li>
+                        <li>登录成功后，本系统会为该账号创建独立的本地 IndexedDB 库：<code class="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800">vip_manager_&lt;userId&gt;</code>。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 导航栏 -->
     <nav class="bg-white dark:bg-dark shadow-sm sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <!-- 小屏：标题与搜索/按钮分行；避免“添加用户”被挤成竖排/错位 -->
+            <div class="flex flex-col sm:flex-row sm:justify-between gap-2 py-2 sm:py-0 sm:h-16">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
+                    <div class="flex-shrink-0 flex items-center whitespace-nowrap">
                         <i class="fa fa-diamond text-primary text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-primary">VIP用户管理系统</span>
+                        <span class="text-lg sm:text-xl font-bold text-primary">VIP用户管理系统</span>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <div class="relative mr-4">
+
+                <div class="flex items-center w-full sm:w-auto gap-2 sm:gap-4">
+                    <div class="relative flex-1 sm:flex-none min-w-0">
                         <input type="text" id="globalSearch" placeholder="搜索用户..."
-                               class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                               class="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
-                    <div class="flex items-center ml-4">
-                        <button id="addNewUserBtn"
-                                class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all">
-                            <i class="fa fa-plus-circle mr-2"></i>
-                            <span>添加用户</span>
-                        </button>
-                    </div>
+
+                    <button id="addNewUserBtn"
+                            class="bg-primary hover:bg-primary/90 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-all whitespace-nowrap shrink-0">
+                        <i class="fa fa-plus-circle sm:mr-2"></i>
+                        <span class="hidden sm:inline">添加用户</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -276,7 +394,7 @@
         </aside>
 
         <!-- 主内容 -->
-        <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-darker p-6">
+        <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-darker p-4 sm:p-6 pb-24 md:pb-6">
             <div class="max-w-7xl mx-auto">
                 <!-- 搜索和筛选 -->
                 <div class="bg-white dark:bg-dark rounded-xl p-4 mb-6 shadow-sm">
@@ -304,7 +422,7 @@
                 </div>
 
                 <!-- 用户卡片列表 -->
-                <div id="usersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="usersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     <!-- 动态生成内容 -->
                 </div>
 
@@ -685,8 +803,8 @@
 
     <!-- 设置模态框 -->
     <div id="settingsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-dark rounded-xl w-full max-w-md">
-            <div class="p-6">
+        <div class="bg-white dark:bg-dark rounded-xl w-[92vw] sm:w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+            <div class="p-4 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">系统设置</h2>
                     <button id="closeSettingsModal"
@@ -780,6 +898,26 @@
 
                         <p id="backupStatus" class="text-xs text-gray-500 dark:text-gray-400 hidden"></p>
                     </div>
+                </div>
+
+
+                <!-- 云端同步 / 账号 -->
+                <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-light mb-2">云端同步（Supabase）</h3>
+                    <div class="text-xs text-gray-600 dark:text-gray-300">当前账号：<span id="authEmailLabel" class="font-mono">未登录</span></div>
+
+                    <div class="flex space-x-3 mt-3">
+                        <button id="syncNowBtn"
+                                class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
+                            <i class="fa fa-cloud mr-2"></i>立即同步
+                        </button>
+                        <button id="logoutBtn"
+                                class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2.5 rounded-lg transition-all">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </button>
+                    </div>
+
+                    <p id="syncStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2 hidden"></p>
                 </div>
 
                 <div class="h-4"></div>
@@ -974,15 +1112,15 @@
     <!-- 移动端底部导航 (仅在小屏幕显示) -->
     <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark shadow-lg border-t border-gray-200 dark:border-gray-700 py-2 px-4 z-20">
         <div class="flex justify-around">
-            <a href="#" class="flex flex-col items-center text-primary">
+            <a href="#" id="mobileUsersLink" class="flex flex-col items-center text-primary">
                 <i class="fa fa-users text-lg"></i>
                 <span class="text-xs mt-1">用户</span>
             </a>
-            <a href="#" class="flex flex-col items-center text-gray-500">
+            <a href="#" id="mobileStatsLink" class="flex flex-col items-center text-gray-500">
                 <i class="fa fa-line-chart text-lg"></i>
                 <span class="text-xs mt-1">统计</span>
             </a>
-            <a href="#" class="flex flex-col items-center text-gray-500">
+            <a href="#" id="mobileSettingsLink" class="flex flex-col items-center text-gray-500">
                 <i class="fa fa-cog text-lg"></i>
                 <span class="text-xs mt-1">设置</span>
             </a>
@@ -1000,14 +1138,330 @@
         class VIPManager {
             constructor() {
                 this.users = {};
-                this.recentViewed = JSON.parse(localStorage.getItem('recentViewed') || '[]');
+                this.recentViewed = [];
                 this.currentUser = null;
 
                 // 🗑️ 回收站 & 📜 日志
-                this.trash = JSON.parse(localStorage.getItem('vipManagerTrash') || '[]');
-                this.logs = JSON.parse(localStorage.getItem('vipManagerLogs') || '[]');
+                this.trash = [];
+                this.logs = [];
 
-                this.loadData();
+                // IndexedDB (Dexie)
+                this.db = null;
+                this._saveTimer = null;
+
+                // ✅ 增量持久化（避免每次全量 bulkPut）
+                this._dirtyUpserts = new Set();   // 需要 put 的 userId
+                this._dirtyDeletes = new Set();   // 需要 delete 的 userId
+
+                // ✅ 增量同步 outbox（离线优先）
+                this._outboxMap = new Map();          // key -> op
+                this._outboxDeletedKeys = new Set();  // 需要从 outbox 表删除的 key
+
+                // ✅ 同步游标（用于增量 pull；若云端不支持对应字段，会自动回退到全量）
+                this._syncState = { lastOpTs: 0, lastUpdatedAt: null };
+
+                // ✅ 应用云端变更时：不再把变更重新写回 outbox（避免循环）
+                this._suppressOps = false;
+            }
+
+            /**
+             * 初始化：为当前登录用户打开独立的本地数据库，并加载数据
+             */
+            async init(userId) {
+                // 重新登录时，先关闭旧库
+                try { this.db?.close?.(); } catch (_) { }
+                this.db = null;
+
+                if (!window.Dexie) throw new Error('Dexie 未加载：请检查 dexie.min.js 是否成功引入');
+
+                // 每个登录账号独立一份本地库
+                this.db = new Dexie(`vip_manager_${userId}`);
+
+                // v1：原始结构
+                this.db.version(1).stores({
+                    users: 'id, phone, tail, pinned, amount, created',
+                    meta: 'key',
+                });
+
+                // v2：新增 outbox（增量同步）— 兼容旧库自动升级
+                this.db.version(2).stores({
+                    users: 'id, phone, tail, pinned, amount, created',
+                    meta: 'key',
+                    outbox: 'key, type, user_id, ts',
+                });
+
+                await this.db.open();
+
+                // 尽量申请持久化存储（减少被系统自动清理的概率）
+                try { await navigator.storage?.persist?.(); } catch (_) { }
+
+                // ✅ 一次性迁移旧 localStorage（如果有）
+                await this._migrateLegacyLocalStorageOnce();
+
+                // ✅ 读取当前用户的数据到内存
+                await this.loadData();
+            }
+
+            // 从 IndexedDB 加载数据（Dexie）
+            async loadData() {
+                if (!this.db) return;
+
+                const allUsers = await this.db.users.toArray();
+                this.users = {};
+                allUsers.forEach(u => { this.users[u.id] = u; });
+
+                this.recentViewed = (await this.db.meta.get('recentViewed'))?.value || [];
+                this.trash = (await this.db.meta.get('trash'))?.value || [];
+                this.logs = (await this.db.meta.get('logs'))?.value || [];
+                this._syncState = (await this.db.meta.get('sync_state'))?.value || { lastOpTs: 0, lastUpdatedAt: null };
+
+                // 加载 outbox（待同步操作）
+                this._outboxMap = new Map();
+                try {
+                    const ops = await (this.db.outbox?.toArray?.() || []);
+                    (ops || []).forEach(op => {
+                        if (op && op.key) this._outboxMap.set(op.key, op);
+                    });
+                } catch (_) {
+                    // 兼容旧库 / 某些环境 outbox 不可用
+                    this._outboxMap = new Map();
+                }
+
+                // 清空本次 dirty 标记（刚 load 完属于“已落盘”状态）
+                this._dirtyUpserts.clear();
+                this._dirtyDeletes.clear();
+                this._outboxDeletedKeys.clear();
+            }
+
+            // 保存数据到 IndexedDB（Dexie）——轻度防抖，避免频繁写入
+            saveData() {
+                if (!this.db) return; // 未初始化（未登录）时，不写入
+                clearTimeout(this._saveTimer);
+                this._saveTimer = setTimeout(() => {
+                    this._flushSave().catch(err => console.error('[saveData]', err));
+                }, 200);
+            }
+
+            async _flushSave() {
+                if (!this.db) return;
+
+                const upsertIds = Array.from(this._dirtyUpserts);
+                const deleteIds = Array.from(this._dirtyDeletes);
+                const outboxItems = Array.from(this._outboxMap.values());
+                const outboxDeleteKeys = Array.from(this._outboxDeletedKeys);
+
+                const tables = [this.db.users, this.db.meta];
+                if (this.db.outbox) tables.push(this.db.outbox);
+
+                await this.db.transaction('rw', tables, async () => {
+                    // 1) users：只写入发生变化的那几条
+                    if (deleteIds.length) {
+                        await this.db.users.bulkDelete(deleteIds);
+                    }
+                    if (upsertIds.length) {
+                        const rows = upsertIds.map(id => this.users[id]).filter(Boolean);
+                        if (rows.length) await this.db.users.bulkPut(rows);
+                    }
+
+                    // 2) outbox：增量同步的待办队列
+                    if (this.db.outbox) {
+                        if (outboxItems.length) await this.db.outbox.bulkPut(outboxItems);
+                        if (outboxDeleteKeys.length) await this.db.outbox.bulkDelete(outboxDeleteKeys);
+                    }
+
+                    // 3) meta：小数据，直接覆盖即可
+                    await this.db.meta.put({ key: 'recentViewed', value: this.recentViewed });
+                    await this.db.meta.put({ key: 'trash', value: this.trash });
+                    await this.db.meta.put({ key: 'logs', value: this.logs });
+                    await this.db.meta.put({ key: 'sync_state', value: this._syncState });
+                });
+
+                // 清空 dirty 标记
+                this._dirtyUpserts.clear();
+                this._dirtyDeletes.clear();
+                this._outboxDeletedKeys.clear();
+            }
+
+            // 立即落盘（用于“同步前先把 outbox 写进去”）
+            async flushNow() {
+                if (!this.db) return;
+                clearTimeout(this._saveTimer);
+                await this._flushSave();
+            }
+
+            getSyncState() {
+                return this._syncState || { lastOpTs: 0, lastUpdatedAt: null };
+            }
+
+            setSyncState(nextState) {
+                this._syncState = nextState || { lastOpTs: 0, lastUpdatedAt: null };
+                this.saveData();
+            }
+
+            // 内部：标记用户发生变更（upsert）
+            _onUserUpsert(userId) {
+                const id = String(userId || '');
+                const user = this.users[id];
+                if (!id || !user) return;
+
+                const ts = Date.now();
+                user.__ts = ts; // 本地“最后修改时间”（用于冲突调试/未来增量同步）
+
+                // 本地落盘
+                this._dirtyUpserts.add(id);
+                this._dirtyDeletes.delete(id);
+
+                // outbox（仅在正常用户操作时写入；应用云端变更时 suppress）
+                if (!this._suppressOps) {
+                    const upKey = `upsert:${id}`;
+                    const delKey = `delete:${id}`;
+
+                    this._outboxMap.set(upKey, { key: upKey, type: 'upsert', user_id: id, payload: user, ts });
+
+                    // 如果之前排队了 delete，则撤销 delete
+                    if (this._outboxMap.has(delKey)) {
+                        this._outboxMap.delete(delKey);
+                        this._outboxDeletedKeys.add(delKey);
+                    }
+                    // ✅ 自动同步（防止你忘记点“同步”）
+                    window.scheduleAutoSync?.('upsert');
+                }
+
+                this.saveData();
+            }
+
+            // 内部：标记用户被删除（tombstone）
+            _onUserDelete(userId) {
+                const id = String(userId || '');
+                if (!id) return;
+
+                // 本地落盘
+                this._dirtyDeletes.add(id);
+                this._dirtyUpserts.delete(id);
+
+                if (!this._suppressOps) {
+                    const ts = Date.now();
+                    const delKey = `delete:${id}`;
+                    const upKey = `upsert:${id}`;
+
+                    this._outboxMap.set(delKey, { key: delKey, type: 'delete', user_id: id, payload: null, ts });
+
+                    // 如果之前排队了 upsert，则撤销 upsert
+                    if (this._outboxMap.has(upKey)) {
+                        this._outboxMap.delete(upKey);
+                        this._outboxDeletedKeys.add(upKey);
+                    }
+                    // ✅ 自动同步（防止你忘记点“同步”）
+                    window.scheduleAutoSync?.('delete');
+                }
+
+                this.saveData();
+            }
+
+            // 供同步使用：获取 outbox（按时间升序）
+            getOutboxOps() {
+                return Array.from(this._outboxMap.values())
+                    .filter(Boolean)
+                    .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+            }
+
+            // 供同步使用：清除已成功 push 的 outbox
+            async clearOutboxKeys(keys) {
+                const arr = Array.isArray(keys) ? keys : [];
+                arr.forEach(k => {
+                    if (this._outboxMap.has(k)) {
+                        this._outboxMap.delete(k);
+                        this._outboxDeletedKeys.add(k);
+                    }
+                });
+                this.saveData();
+            }
+
+            // 供同步使用：应用云端变更（不会写回 outbox）
+            applyRemoteRows(rows) {
+                const list = Array.isArray(rows) ? rows : [];
+                let upserts = 0, deletes = 0;
+
+                this._suppressOps = true;
+                try {
+                    list.forEach(row => {
+                        const id = String(row?.user_id || '');
+                        if (!id) return;
+
+                        if (row.deleted) {
+                            if (this.users[id]) delete this.users[id];
+
+                            this._dirtyDeletes.add(id);
+                            this._dirtyUpserts.delete(id);
+
+                            // 从最近浏览移除
+                            this.recentViewed = Array.isArray(this.recentViewed)
+                                ? this.recentViewed.filter(x => x !== id && (x && x.id) !== id)
+                                : [];
+
+                            deletes++;
+                        } else {
+                            const data = row?.data || {};
+                            if (!data.id) data.id = id;
+                            this.users[id] = data;
+
+                            this._dirtyUpserts.add(id);
+                            this._dirtyDeletes.delete(id);
+
+                            upserts++;
+                        }
+                    });
+                } finally {
+                    this._suppressOps = false;
+                }
+
+                this.saveData();
+                return { upserts, deletes };
+            }
+
+            // 迁移旧 localStorage → IndexedDB（只做一次）
+            async _migrateLegacyLocalStorageOnce() {
+                if (!this.db) return;
+
+                const migrated = await this.db.meta.get('legacy_migrated_v1');
+                if (migrated?.value) return;
+
+                const legacyUsersRaw = localStorage.getItem('vipManagerUsers');
+                const legacyRecentRaw = localStorage.getItem('recentViewed');
+                const legacyTrashRaw = localStorage.getItem('vipManagerTrash');
+                const legacyLogsRaw = localStorage.getItem('vipManagerLogs');
+
+                // 没有任何旧数据，也标记成已迁移（避免每次打开都检查）
+                if (!legacyUsersRaw && !legacyRecentRaw && !legacyTrashRaw && !legacyLogsRaw) {
+                    await this.db.meta.put({ key: 'legacy_migrated_v1', value: true, at: Date.now() });
+                    return;
+                }
+
+                let legacyUsers = {};
+                try { legacyUsers = legacyUsersRaw ? JSON.parse(legacyUsersRaw) : {}; } catch (_) { legacyUsers = {}; }
+
+                let legacyRecent = [];
+                let legacyTrash = [];
+                let legacyLogs = [];
+                try { legacyRecent = legacyRecentRaw ? JSON.parse(legacyRecentRaw) : []; } catch (_) { }
+                try { legacyTrash = legacyTrashRaw ? JSON.parse(legacyTrashRaw) : []; } catch (_) { }
+                try { legacyLogs = legacyLogsRaw ? JSON.parse(legacyLogsRaw) : []; } catch (_) { }
+
+                const userArr = Object.values(legacyUsers);
+
+                await this.db.transaction('rw', this.db.users, this.db.meta, async () => {
+                    if (userArr.length) await this.db.users.bulkPut(userArr);
+                    await this.db.meta.put({ key: 'recentViewed', value: legacyRecent });
+                    await this.db.meta.put({ key: 'trash', value: legacyTrash });
+                    await this.db.meta.put({ key: 'logs', value: legacyLogs });
+                    await this.db.meta.put({ key: 'legacy_migrated_v1', value: true, at: Date.now() });
+                });
+
+                // 迁移完清理旧 localStorage（避免重复导入）
+                localStorage.removeItem('vipManagerUsers');
+                localStorage.removeItem('recentViewed');
+                localStorage.removeItem('vipManagerTrash');
+                localStorage.removeItem('vipManagerLogs');
             }
 
             addLog(entry) {
@@ -1019,31 +1473,16 @@
                 // 可选：限制长度，避免无限增长
                 this.logs = this.logs.slice(0, 500);
                 this.saveData();
+                // ✅ meta 也需要自动同步（否则只改日志时要等别的操作才会上云）
+                window.scheduleAutoSync?.('logs');
             }
 
             clearLogs() {
                 this.logs = [];
                 this.saveData();
+                window.scheduleAutoSync?.('logs');
                 return true;
             }
-
-
-            // 从localStorage加载数据
-            loadData() {
-                const savedUsers = localStorage.getItem('vipManagerUsers');
-                if (savedUsers) {
-                    this.users = JSON.parse(savedUsers);
-                }
-            }
-
-            // 保存数据到localStorage
-            saveData() {
-                localStorage.setItem('vipManagerUsers', JSON.stringify(this.users));
-                localStorage.setItem('recentViewed', JSON.stringify(this.recentViewed));
-                localStorage.setItem('vipManagerTrash', JSON.stringify(this.trash));
-                localStorage.setItem('vipManagerLogs', JSON.stringify(this.logs));
-            }
-
 
             // 获取所有用户
             getAllUsers() {
@@ -1082,7 +1521,7 @@
                 };
 
                 this.users[userId] = newUser;
-                this.saveData();
+                this._onUserUpsert(userId);
                 return true;
             }
 
@@ -1113,7 +1552,7 @@
                 };
 
                 this.users[userId] = newUser;
-                this.saveData();
+                this._onUserUpsert(userId);
                 return true;
             }
 
@@ -1154,7 +1593,7 @@
                     note: '移入回收站'
                 });
 
-                this.saveData();
+                this._onUserDelete(id);
                 return true;
             }
 
@@ -1177,6 +1616,8 @@
                 });
 
                 this.saveData();
+                // ✅ 仅改回收站/日志也要同步到云端（vip_meta）
+                window.scheduleAutoSync?.('trash');
                 return true;
             }
 
@@ -1194,6 +1635,7 @@
                 });
 
                 this.saveData();
+                window.scheduleAutoSync?.('trash');
                 return true;
             }
 
@@ -1234,7 +1676,7 @@
                 });
 
                 // 6) 保存
-                this.saveData();
+                this._onUserUpsert(restoredId);
                 return true;
             }
 
@@ -1251,7 +1693,7 @@
                         date: new Date().toISOString(),
                         description: description
                     });
-                    this.saveData();
+                    this._onUserUpsert(userId);
                     return true;
                 }
                 return false;
@@ -1269,7 +1711,7 @@
                         date: new Date().toISOString(),
                         description: description
                     });
-                    this.saveData();
+                    this._onUserUpsert(userId);
                     return true;
                 }
                 return false;
@@ -1280,7 +1722,7 @@
                 const user = this.users[userId];
                 if (user) {
                     user.pinned = !user.pinned;
-                    this.saveData();
+                    this._onUserUpsert(userId);
                     return user.pinned;
                 }
                 return false;
@@ -1332,7 +1774,7 @@
                     description: newData.description
                 };
 
-                this.saveData();
+                this._onUserUpsert(userId);
                 return true;
             }
 
@@ -1353,7 +1795,7 @@
                         }
 
                         user.history.splice(historyIndex, 1);
-                        this.saveData();
+                        this._onUserUpsert(userId);
                         return true;
                     }
                 }
@@ -1405,6 +1847,7 @@
                 // 限制最多5条
                 this.recentViewed = this.recentViewed.slice(0, 5);
                 this.saveData();
+                window.scheduleAutoSync?.('recent');
             }
 
             // 获取最近浏览的用户
@@ -2571,8 +3014,734 @@
 
 
 
+
+        // ==========================
+        // Supabase Auth / 云端同步
+        // ==========================
+        const SB_URL_KEY = 'sb_url';
+        const SB_ANON_KEY_KEY = 'sb_anon';
+
+        let supabaseClient = null;
+        let authedUser = null;
+        function getSupabaseConfig() {
+            return {
+                url: (localStorage.getItem(SB_URL_KEY) || '').trim(),
+                anon: (localStorage.getItem(SB_ANON_KEY_KEY) || '').trim(),
+            };
+        }
+
+        function setSupabaseConfig(url, anon) {
+            localStorage.setItem(SB_URL_KEY, (url || '').trim());
+            localStorage.setItem(SB_ANON_KEY_KEY, (anon || '').trim());
+        }
+
+        function clearSupabaseConfig() {
+            localStorage.removeItem(SB_URL_KEY);
+            localStorage.removeItem(SB_ANON_KEY_KEY);
+        }
+
+        function tryInitSupabaseClient() {
+            const { url, anon } = getSupabaseConfig();
+            if (!url || !anon || !window.supabase?.createClient) return null;
+            return supabase.createClient(url, anon, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                },
+            });
+        }
+
+        function setAuthMsg(msg) {
+            const el = document.getElementById('authMsg');
+            if (!el) return;
+            if (!msg) {
+                el.classList.add('hidden');
+                el.textContent = '';
+            } else {
+                el.classList.remove('hidden');
+                el.textContent = msg;
+            }
+        }
+
+        function setSyncStatus(msg) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            if (!msg) {
+                el.classList.add('hidden');
+                el.textContent = '';
+            } else {
+                el.classList.remove('hidden');
+                el.textContent = msg;
+            }
+        }
+
+        function updateConfigBadge() {
+            const badge = document.getElementById('sbConfigBadge');
+            if (!badge) return;
+            const { url, anon } = getSupabaseConfig();
+            if (url && anon) {
+                badge.textContent = '已配置';
+                badge.className = 'text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
+            } else {
+                badge.textContent = '未配置';
+                badge.className = 'text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200';
+            }
+        }
+
+        function showAuthOverlay() {
+            const overlay = document.getElementById('authOverlay');
+            overlay?.classList.remove('hidden');
+            overlay?.classList.add('flex');
+        }
+
+        function hideAuthOverlay() {
+            const overlay = document.getElementById('authOverlay');
+            overlay?.classList.add('hidden');
+            overlay?.classList.remove('flex');
+        }
+
+        function setAuthEmailLabel(text) {
+            const el = document.getElementById('authEmailLabel');
+            if (el) el.textContent = text || '未登录';
+        }
+
+        async function bootForUser(user) {
+            authedUser = user;
+            setAuthEmailLabel(user?.email || user?.id || '已登录');
+
+            // 初始化本地 IndexedDB
+            try {
+                await vipManager.init(user.id);
+            } catch (e) {
+                console.error(e);
+                setAuthMsg('本地数据库初始化失败：' + (e?.message || e));
+                showAuthOverlay();
+                return;
+            }
+
+            // 刷新 UI
+            renderUserList();
+            renderRecentUsers();
+            renderTrashList();
+            if (typeof renderLogsList === 'function') renderLogsList();
+            hideAuthOverlay();
+            // 应用云端同步设置，并在进入后拉取一次云端最新
+            try { await applyCloudSyncSettings(false); } catch (_) { }
+            try { schedulePull('startup'); } catch (_) { }
+
+        }
+
+        async function initAuthUI() {
+            // 预填配置与输入框
+            const cfg = getSupabaseConfig();
+            const sbUrlInput = document.getElementById('sbUrlInput');
+            const sbAnonInput = document.getElementById('sbAnonInput');
+            if (sbUrlInput) sbUrlInput.value = cfg.url;
+            if (sbAnonInput) sbAnonInput.value = cfg.anon;
+            updateConfigBadge();
+
+            document.getElementById('sbSaveConfigBtn')?.addEventListener('click', async () => {
+                const url = (sbUrlInput?.value || '').trim();
+                const anon = (sbAnonInput?.value || '').trim();
+                if (!url || !anon) {
+                    setAuthMsg('请先填写 Supabase Project URL 和 Anon Key。');
+                    return;
+                }
+                setSupabaseConfig(url, anon);
+                updateConfigBadge();
+                setAuthMsg('');
+                // 重新初始化 client
+                supabaseClient = tryInitSupabaseClient();
+                if (!supabaseClient) {
+                    setAuthMsg('Supabase 客户端初始化失败：请检查 CDN 是否加载成功。');
+                    return;
+                }
+                // 尝试读取 session
+                const { data, error } = await supabaseClient.auth.getSession();
+                if (error) {
+                    setAuthMsg('读取会话失败：' + error.message);
+                    return;
+                }
+                if (data?.session?.user) {
+                    await bootForUser(data.session.user);
+                } else {
+                    showAuthOverlay();
+                }
+            });
+
+            document.getElementById('sbClearConfigBtn')?.addEventListener('click', () => {
+                clearSupabaseConfig();
+                if (sbUrlInput) sbUrlInput.value = '';
+                if (sbAnonInput) sbAnonInput.value = '';
+                updateConfigBadge();
+                setAuthMsg('已清除配置，请重新填写。');
+                supabaseClient = null;
+                authedUser = null;
+                setAuthEmailLabel('未登录');
+                showAuthOverlay();
+            });
+
+            document.getElementById('authOverlayClose')?.addEventListener('click', () => {
+                // 允许关闭：进入离线本地模式（不启用云端同步）
+                hideAuthOverlay();
+                setAuthMsg('');
+                setSyncStatus('离线模式：未登录/未配置云端同步');
+            });
+
+            // 初始化 Supabase（未配置时不要 return，否则登录/注册按钮事件不会绑定）
+            supabaseClient = tryInitSupabaseClient();
+            if (!supabaseClient) {
+                showAuthOverlay();
+                setAuthMsg('请先配置 Supabase Project URL 与 Anon Key。');
+            }
+
+            // 登录 / 注册
+            document.getElementById('signInBtn')?.addEventListener('click', async () => {
+                setAuthMsg('');
+                const email = (document.getElementById('authEmail')?.value || '').trim();
+                const password = (document.getElementById('authPassword')?.value || '').trim();
+                if (!email || !password) {
+                    setAuthMsg('请输入邮箱与密码。');
+                    return;
+                }
+                supabaseClient = supabaseClient || tryInitSupabaseClient();
+                if (!supabaseClient) {
+                    setAuthMsg('请先填写并保存 Supabase 配置。');
+                    return;
+                }
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    setAuthMsg(error.message);
+                    return;
+                }
+                if (data?.user) {
+                    await bootForUser(data.user);
+                }
+            });
+
+            document.getElementById('signUpBtn')?.addEventListener('click', async () => {
+                setAuthMsg('');
+                const email = (document.getElementById('authEmail')?.value || '').trim();
+                const password = (document.getElementById('authPassword')?.value || '').trim();
+                if (!email || !password) {
+                    setAuthMsg('请输入邮箱与密码。');
+                    return;
+                }
+                supabaseClient = supabaseClient || tryInitSupabaseClient();
+                if (!supabaseClient) {
+                    setAuthMsg('请先填写并保存 Supabase 配置。');
+                    return;
+                }
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    setAuthMsg(error.message);
+                    return;
+                }
+                if (data?.session?.user) {
+                    await bootForUser(data.session.user);
+                } else {
+                    // 可能启用了邮箱验证
+                    setAuthMsg('注册成功：请到邮箱完成验证后再登录。');
+                }
+            });
+
+            // 设置里：退出登录
+            document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+                if (!supabaseClient) return;
+                await supabaseClient.auth.signOut();
+                authedUser = null;
+                // 清空本地内存态，并关闭 DB
+                vipManager.users = {};
+                vipManager.recentViewed = [];
+                vipManager.trash = [];
+                vipManager.logs = [];
+                try { vipManager.db?.close?.(); } catch (_) { }
+                vipManager.db = null;
+                setAuthEmailLabel('未登录');
+                showAuthOverlay();
+                setSyncStatus('');
+            });
+
+            // 设置里：立即同步（当前为“全量 upsert”演示版；后续会升级为增量 outbox）
+            document.getElementById('syncNowBtn')?.addEventListener('click', async () => {
+                await syncNow();
+            });
+
+            // 自动读取会话
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error) {
+                showAuthOverlay();
+                setAuthMsg('读取会话失败：' + error.message);
+                return;
+            }
+            if (data?.session?.user) {
+                await bootForUser(data.session.user);
+            } else {
+                showAuthOverlay();
+            }
+
+            // 监听会话变化（比如 token 刷新/登出）
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    await bootForUser(session.user);
+                }
+                if (event === 'SIGNED_OUT') {
+                    authedUser = null;
+                    try { stopAutoPull(); } catch (_) { }
+                    try { await stopRealtime(); } catch (_) { }
+                    try { setSyncStatus(''); } catch (_) { }
+                    setAuthEmailLabel('未登录');
+                    showAuthOverlay();
+                }
+            });
+        }
+
+        let __vipUsersCapsCache = null;
+
+        // 探测云端表是否存在可选字段（不存在则自动回退到“全量 pull”）
+        async function getVipUsersCaps() {
+            if (__vipUsersCapsCache) return __vipUsersCapsCache;
+
+            const caps = { updated_at: false, op_ts: false };
+            if (!supabaseClient || !authedUser) return caps;
+
+            // 注意：这里用 select 某列来探测列是否存在（不存在会返回 error）
+            try {
+                const { error } = await supabaseClient
+                    .from('vip_users')
+                    .select('updated_at')
+                    .eq('owner_id', authedUser.id)
+                    .limit(1);
+                if (!error) caps.updated_at = true;
+            } catch (_) { }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('vip_users')
+                    .select('op_ts')
+                    .eq('owner_id', authedUser.id)
+                    .limit(1);
+                if (!error) caps.op_ts = true;
+            } catch (_) { }
+
+            __vipUsersCapsCache = caps;
+            return caps;
+        }
+
+
+        // =======================
+        // 自动同步（可选：默认开启、可自行关闭）
+        // =======================
+        let __autoSyncTimer = null;
+        window.__autoSyncReqId = window.__autoSyncReqId || 0;
+        let __isSyncing = false;
+
+        // ✅ 变更后尽快同步：减少“必须点一下别处才同步”的体感
+        // 说明：依旧有轻量防抖，避免批量操作（如导入）触发多次同步。
+        function scheduleAutoSync(reason = '') {
+            try {
+                if (!supabaseClient || !authedUser) return;
+
+                // 不依赖 navigator.onLine（某些手机 WebView 不准）；失败会在 syncNow 里捕获
+                try { setSyncStatus('已记录本地变更，准备同步…'); } catch (_) { }
+
+                // 合并短时间内的多次操作：尽量“改完就同步”，同时避免疯狂触发
+                clearTimeout(__autoSyncTimer);
+                const reqId = (++window.__autoSyncReqId);
+
+                const run = async () => {
+                    // 如果在同步中，不丢请求：等一会儿再试（否则会出现“要点别处才同步”）
+                    if (__isSyncing) {
+                        __autoSyncTimer = setTimeout(run, 220);
+                        return;
+                    }
+                    try { await syncNow(); } catch (_) { }
+
+                    // 如果同步期间又产生了新 outbox，继续把队列排空
+                    try {
+                        const pending = vipManager?.getOutboxOps?.() || [];
+                        if (pending.length) scheduleAutoSync('drain');
+                    } catch (_) { }
+                };
+
+                __autoSyncTimer = setTimeout(() => {
+                    // 如果期间又来了新请求，则这次让位（减少重复 sync）
+                    if (reqId !== window.__autoSyncReqId) return;
+                    run();
+                }, 80);
+            } catch (_) { }
+        }
+        window.scheduleAutoSync = scheduleAutoSync;
+
+        // =======================
+        // 自动拉取 / 切回页面拉取 / Realtime（可选）
+        // =======================
+        let __autoPullIntervalId = null;
+        let __pullDebounceTimer = null;
+        let __realtimeChannel = null;
+
+        function getCloudSyncSettings() {
+            const autoPullEnabled = (localStorage.getItem('cloud_autoPullEnabled') ?? '1') === '1';
+            const autoPullIntervalSec = parseInt(localStorage.getItem('cloud_autoPullIntervalSec') || '30', 10);
+            const pullOnFocus = (localStorage.getItem('cloud_pullOnFocus') ?? '1') === '1';
+            const realtimeEnabled = (localStorage.getItem('cloud_realtimeEnabled') ?? '0') === '1';
+            return {
+                autoPullEnabled,
+                autoPullIntervalSec: Number.isFinite(autoPullIntervalSec) ? autoPullIntervalSec : 30,
+                pullOnFocus,
+                realtimeEnabled,
+            };
+        }
+
+        function setCloudSyncSettings(next) {
+            const s = { ...getCloudSyncSettings(), ...(next || {}) };
+            localStorage.setItem('cloud_autoPullEnabled', s.autoPullEnabled ? '1' : '0');
+            localStorage.setItem('cloud_autoPullIntervalSec', String(s.autoPullIntervalSec || 30));
+            localStorage.setItem('cloud_pullOnFocus', s.pullOnFocus ? '1' : '0');
+            localStorage.setItem('cloud_realtimeEnabled', s.realtimeEnabled ? '1' : '0');
+            return s;
+        }
+
+        function schedulePull(reason = '') {
+            try {
+                if (!supabaseClient || !authedUser) return;
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+                clearTimeout(__pullDebounceTimer);
+                __pullDebounceTimer = setTimeout(async () => {
+                    if (__isSyncing) return;
+                    try { await syncNow(); } catch (_) { }
+                }, 350);
+            } catch (_) { }
+        }
+        window.schedulePull = schedulePull;
+
+        function stopAutoPull() {
+            if (__autoPullIntervalId) {
+                clearInterval(__autoPullIntervalId);
+                __autoPullIntervalId = null;
+            }
+        }
+
+        function startAutoPull(intervalSec = 30) {
+            stopAutoPull();
+            if (!supabaseClient || !authedUser) return;
+            const sec = Math.max(10, parseInt(intervalSec || 30, 10) || 30);
+            __autoPullIntervalId = setInterval(() => {
+                schedulePull('interval');
+            }, sec * 1000);
+        }
+
+        async function stopRealtime() {
+            try {
+                if (supabaseClient && __realtimeChannel) {
+                    await supabaseClient.removeChannel(__realtimeChannel);
+                }
+            } catch (_) { }
+            __realtimeChannel = null;
+        }
+
+        async function startRealtime() {
+            if (!supabaseClient || !authedUser) return;
+            if (__realtimeChannel) return; // 已启动
+            try {
+                __realtimeChannel = supabaseClient
+                    .channel(`vip_users_changes_${authedUser.id}`)
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'vip_users', filter: `owner_id=eq.${authedUser.id}` },
+                        (_payload) => {
+                            // 为了简单稳妥：收到变更就触发一次拉取（会自动增量）
+                            schedulePull('realtime');
+                        }
+                    )
+                    .subscribe((status) => {
+                        // status: SUBSCRIBED / TIMED_OUT / CLOSED / CHANNEL_ERROR
+                        if (status === 'SUBSCRIBED') {
+                            setSyncStatus('Realtime 已连接：云端变更将自动拉取。');
+                        }
+                    });
+            } catch (e) {
+                console.warn('[realtime]', e);
+                setSyncStatus('Realtime 启动失败：' + (e?.message || e));
+                __realtimeChannel = null;
+            }
+        }
+
+        async function applyCloudSyncSettings(fromUI = false) {
+            // 从 UI 或 localStorage 读取
+            let s = getCloudSyncSettings();
+
+            const elAutoPull = document.getElementById('autoPullEnabled');
+            const elInterval = document.getElementById('autoPullInterval');
+            const elFocus = document.getElementById('pullOnFocus');
+            const elRealtime = document.getElementById('realtimeEnabled');
+
+            if (fromUI && elAutoPull && elInterval && elFocus && elRealtime) {
+                s = setCloudSyncSettings({
+                    autoPullEnabled: !!elAutoPull.checked,
+                    autoPullIntervalSec: parseInt(elInterval.value || '30', 10) || 30,
+                    pullOnFocus: !!elFocus.checked,
+                    realtimeEnabled: !!elRealtime.checked,
+                });
+            } else {
+                // 用 localStorage 回填 UI
+                if (elAutoPull) elAutoPull.checked = s.autoPullEnabled;
+                if (elInterval) elInterval.value = String(s.autoPullIntervalSec);
+                if (elFocus) elFocus.checked = s.pullOnFocus;
+                if (elRealtime) elRealtime.checked = s.realtimeEnabled;
+            }
+
+            // 应用：定时拉取
+            stopAutoPull();
+            if (s.autoPullEnabled) startAutoPull(s.autoPullIntervalSec);
+
+            // 应用：Realtime
+            await stopRealtime();
+            if (s.realtimeEnabled) await startRealtime();
+
+            return s;
+        }
+        window.applyCloudSyncSettings = applyCloudSyncSettings;
+
+
+        async function syncNow() {
+            if (!supabaseClient || !authedUser) {
+                setSyncStatus('未登录，无法同步。');
+                return;
+            }
+
+
+            if (__isSyncing) {
+                setSyncStatus('同步中…');
+                return;
+            }
+            __isSyncing = true;
+            setSyncStatus('同步中…');
+
+            // 先把本地变更落盘（确保 outbox 完整）
+            try { await vipManager.flushNow(); } catch (_) { }
+
+            const clone = (obj) => {
+                try { return (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); }
+                catch (_) { return JSON.parse(JSON.stringify(obj || null)); }
+            };
+
+            try {
+                const caps = await getVipUsersCaps();
+
+                // 1) push：仅推送 outbox（增量）
+                const ops = vipManager.getOutboxOps();
+                const batchSize = 200;
+
+                if (ops.length) {
+                    setSyncStatus(`同步中…正在上传本地变更（${ops.length}）`);
+                }
+
+                for (let i = 0; i < ops.length; i += batchSize) {
+                    const slice = ops.slice(i, i + batchSize);
+                    const rows = slice.map(op => {
+                        const userId = String(op.user_id || '');
+                        const ts = Number(op.ts || Date.now());
+
+                        if (op.type === 'delete') {
+                            const row = {
+                                owner_id: authedUser.id,
+                                user_id: userId,
+                                data: { id: userId, __ts: ts },
+                                deleted: true,
+                            };
+                            if (caps.op_ts) row.op_ts = ts;
+                            if (caps.updated_at) row.updated_at = new Date(ts).toISOString();
+                            return row;
+                        }
+
+                        // upsert
+                        const payload = op.payload || vipManager.getUser(userId) || {};
+                        const data = clone(payload);
+                        data.id = data.id || userId;
+                        data.__ts = typeof data.__ts === 'number' ? data.__ts : ts;
+
+                        const row = {
+                            owner_id: authedUser.id,
+                            user_id: userId,
+                            data,
+                            deleted: false,
+                        };
+                        if (caps.op_ts) row.op_ts = data.__ts;
+                        if (caps.updated_at) row.updated_at = new Date(data.__ts).toISOString();
+                        return row;
+                    });
+
+                    const { error } = await supabaseClient
+                        .from('vip_users')
+                        .upsert(rows, { onConflict: 'owner_id,user_id' });
+
+                    if (error) throw error;
+
+                    // 该批次成功：从 outbox 清除（即使后续失败，也能“推进进度”）
+                    const keys = slice.map(op => op.key).filter(Boolean);
+                    await vipManager.clearOutboxKeys(keys);
+                    await vipManager.flushNow();
+                }
+
+                // 1.5) push meta（不大，但也做分离，避免影响 users 同步）
+                try {
+                    const metaRows = [
+                        { owner_id: authedUser.id, key: 'recentViewed', value: vipManager.recentViewed },
+                        { owner_id: authedUser.id, key: 'trash', value: vipManager.trash },
+                        { owner_id: authedUser.id, key: 'logs', value: vipManager.logs },
+                    ];
+                    const { error } = await supabaseClient
+                        .from('vip_meta')
+                        .upsert(metaRows, { onConflict: 'owner_id,key' });
+                    if (error) throw error;
+                } catch (e) {
+                    // meta 同步失败不阻断 users
+                    console.warn('[sync meta]', e);
+                }
+
+                // 2) pull：优先增量（若云端无 op_ts/updated_at，则回退全量）
+                const state = vipManager.getSyncState();
+                let didIncremental = false;
+
+                let selectCols = 'user_id,data,deleted';
+                if (caps.op_ts) selectCols += ',op_ts';
+                if (caps.updated_at) selectCols += ',updated_at';
+
+                let q = supabaseClient
+                    .from('vip_users')
+                    .select(selectCols)
+                    .eq('owner_id', authedUser.id);
+
+                if (caps.op_ts && Number(state?.lastOpTs || 0) > 0) {
+                    q = q.gt('op_ts', Number(state.lastOpTs));
+                    didIncremental = true;
+                } else if (caps.updated_at && state?.lastUpdatedAt) {
+                    q = q.gt('updated_at', String(state.lastUpdatedAt));
+                    didIncremental = true;
+                }
+
+                setSyncStatus(`同步中…正在下载云端变更${didIncremental ? '（增量）' : '（全量）'}`);
+
+                let cloudUsers = null;
+                let pullUsersErr = null;
+
+                ({ data: cloudUsers, error: pullUsersErr } = await q);
+
+                // 如果拉取出错（比如列探测误判、策略变更等），则回退全量基础字段拉取
+                if (pullUsersErr) {
+                    console.warn('[pull fallback]', pullUsersErr);
+                    const { data, error } = await supabaseClient
+                        .from('vip_users')
+                        .select('user_id,data,deleted')
+                        .eq('owner_id', authedUser.id);
+                    if (error) throw error;
+                    cloudUsers = data;
+                    didIncremental = false;
+                    caps.op_ts = false;
+                    caps.updated_at = false;
+                }
+
+                // ✅ 应用云端变更（包含 deleted=true 的 tombstone）
+                const { upserts, deletes } = vipManager.applyRemoteRows(cloudUsers || []);
+
+                // 3) pull meta
+                try {
+                    const { data: cloudMeta, error: pullMetaErr } = await supabaseClient
+                        .from('vip_meta')
+                        .select('key,value')
+                        .eq('owner_id', authedUser.id);
+
+                    if (!pullMetaErr) {
+                        const metaMap = {};
+                        (cloudMeta || []).forEach(r => metaMap[r.key] = r.value);
+
+                        // 云端为主（没有则保留本地）
+                        vipManager.recentViewed = metaMap.recentViewed || vipManager.recentViewed || [];
+                        vipManager.trash = metaMap.trash || vipManager.trash || [];
+                        vipManager.logs = metaMap.logs || vipManager.logs || [];
+                    }
+                } catch (e) {
+                    console.warn('[pull meta]', e);
+                }
+
+                // 4) 更新同步游标（用于下一次增量 pull）
+                let maxTs = Number(state?.lastOpTs || 0);
+                let maxUpdatedAt = state?.lastUpdatedAt || null;
+
+                (cloudUsers || []).forEach(row => {
+                    const ts =
+                        (caps.op_ts && typeof row.op_ts === 'number' ? row.op_ts :
+                            (row?.data && typeof row.data.__ts === 'number' ? row.data.__ts : 0));
+
+                    if (ts) maxTs = Math.max(maxTs, ts);
+
+                    const ua =
+                        (caps.updated_at && row.updated_at ? row.updated_at :
+                            (ts ? new Date(ts).toISOString() : null));
+
+                    if (ua && (!maxUpdatedAt || ua > maxUpdatedAt)) maxUpdatedAt = ua;
+                });
+
+                // 如果这次是“全量”，同步后把游标推进到当前（避免下次仍全量）
+                if (!didIncremental) {
+                    const nowTs = Date.now();
+                    maxTs = Math.max(maxTs, nowTs);
+                    maxUpdatedAt = new Date(maxTs).toISOString();
+                }
+
+                vipManager.setSyncState({ lastOpTs: maxTs, lastUpdatedAt: maxUpdatedAt });
+                await vipManager.flushNow();
+
+                // 刷新 UI
+                renderUserList();
+                renderRecentUsers();
+                renderTrashList();
+                if (typeof renderLogsList === 'function') renderLogsList();
+
+                setSyncStatus(`同步完成：本地上传 ${ops.length}，云端应用 +${upserts} / -${deletes}（${new Date().toLocaleString()}）`);
+            } catch (e) {
+                console.error(e);
+                setSyncStatus('同步失败：' + (e?.message || e));
+            }
+
+            __isSyncing = false;
+        }
+
+
+
         // 事件监听器
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            // 初始化登录/同步（Supabase）
+            initAuthUI();
+
+            // 云端同步设置（回填 UI）
+            try { await applyCloudSyncSettings(false); } catch (_) { }
+
+            // 云端同步设置：监听改动（定时拉取 / Realtime）
+            document.getElementById('autoPullEnabled')?.addEventListener('change', () => applyCloudSyncSettings(true));
+            document.getElementById('autoPullInterval')?.addEventListener('change', () => applyCloudSyncSettings(true));
+            document.getElementById('pullOnFocus')?.addEventListener('change', () => applyCloudSyncSettings(true));
+            document.getElementById('realtimeEnabled')?.addEventListener('change', () => applyCloudSyncSettings(true));
+
+            // 切回页面 / 恢复联网：自动拉取一次
+            document.addEventListener('visibilitychange', () => {
+                try {
+                    if (document.visibilityState !== 'visible') return;
+                    const s = getCloudSyncSettings();
+                    if (!s.pullOnFocus) return;
+                    schedulePull('visibility');
+                } catch (_) { }
+            });
+
+            window.addEventListener('online', () => {
+                try { schedulePull('online'); } catch (_) { }
+                try { scheduleAutoSync('online'); } catch (_) { }
+            });
+
+
+
             // 初始化用户列表和最近浏览
             renderUserList();
             renderRecentUsers();
@@ -2940,8 +4109,8 @@
             });
 
             // 刷新按钮
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                vipManager.loadData();
+            document.getElementById('refreshBtn').addEventListener('click', async () => {
+                await vipManager.loadData();
                 renderUserList();
                 renderRecentUsers();
             });
@@ -2954,6 +4123,32 @@
                 e.preventDefault();
                 openSettingsModal();
             });
+
+            // 移动端底部导航：复用侧边栏的功能
+            const mobileUsersLink = document.getElementById('mobileUsersLink');
+            if (mobileUsersLink) {
+                mobileUsersLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('allUsersLink')?.click();
+                });
+            }
+
+            const mobileStatsLink = document.getElementById('mobileStatsLink');
+            if (mobileStatsLink) {
+                mobileStatsLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('statsLink')?.click();
+                });
+            }
+
+            const mobileSettingsLink = document.getElementById('mobileSettingsLink');
+            if (mobileSettingsLink) {
+                mobileSettingsLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('settingsLink')?.click();
+                });
+            }
+
 
             // 保存设置
             document.getElementById('saveSettings').addEventListener('click', () => {
