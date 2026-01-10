@@ -3106,31 +3106,44 @@
             if (el) el.textContent = text || '未登录';
         }
 
+        // 登录后初始化逻辑（改进版的 bootForUser）
         async function bootForUser(user) {
-            authedUser = user;
-            setAuthEmailLabel(user?.email || user?.id || '已登录');
+            // 预清理上次登录用户的缓存（防止数据残留）
+            vipManager.users = {};
+            vipManager.recentViewed = [];
+            vipManager.trash = [];
+            vipManager.logs = [];
+            vipManager._dirtyUpserts.clear();
+            vipManager._dirtyDeletes.clear();
+            vipManager._outboxMap.clear();
+            vipManager._outboxDeletedKeys.clear();
 
-            // 初始化本地 IndexedDB
+            // 初始化本地 IndexedDB（关闭旧库，打开新的 vip_manager_<user.id>）
             try {
                 await vipManager.init(user.id);
             } catch (e) {
-                console.error(e);
-                setAuthMsg('本地数据库初始化失败：' + (e?.message || e));
+                console.error('本地数据库初始化失败:', e);
+                setAuthMsg('本地数据库初始化失败：' + e.message);
                 showAuthOverlay();
                 return;
             }
 
-            // 刷新 UI
+            // 设置登录用户状态
+            authedUser = user;
+            setAuthEmailLabel(user.email || user.id || '已登录');
+
+            // 刷新界面
             renderUserList();
             renderRecentUsers();
             renderTrashList();
             if (typeof renderLogsList === 'function') renderLogsList();
             hideAuthOverlay();
-            // 应用云端同步设置，并在进入后拉取一次云端最新
+
+            // 应用云端同步设置并立即尝试拉取
             try { await applyCloudSyncSettings(false); } catch (_) { }
             try { schedulePull('startup'); } catch (_) { }
-
         }
+
 
         async function initAuthUI() {
             // 预填配置与输入框
@@ -3246,22 +3259,44 @@
                 }
             });
 
-            // 设置里：退出登录
+            // 完整退出登录逻辑（在 logoutBtn 事件处理内或单独函数中）
             document.getElementById('logoutBtn')?.addEventListener('click', async () => {
                 if (!supabaseClient) return;
+                const oldUserId = authedUser?.id;  // 记录当前用户 ID
+                // 调用 Supabase signOut 清除会话
                 await supabaseClient.auth.signOut();
+
+                // 停止后台同步任务
+                try { stopAutoPull(); } catch (_) { }
+                try { await stopRealtime(); } catch (_) { }
+
+                // 清空登录状态
                 authedUser = null;
-                // 清空本地内存态，并关闭 DB
+                setAuthEmailLabel('未登录');
+                setSyncStatus('');
+
+                // 清空 vipManager 内存缓存
                 vipManager.users = {};
                 vipManager.recentViewed = [];
                 vipManager.trash = [];
                 vipManager.logs = [];
-                try { vipManager.db?.close?.(); } catch (_) { }
-                vipManager.db = null;
-                setAuthEmailLabel('未登录');
+
+                // 关闭并删除 IndexedDB 数据库
+                if (vipManager.db) {
+                    try { vipManager.db.close(); } catch (_) { }
+                    vipManager.db = null;
+                }
+                if (oldUserId) {
+                    try { await Dexie.delete(`vip_manager_${oldUserId}`); } catch (_) { }
+                }
+
+                // 可选：重置 Supabase 客户端
+                supabaseClient = null;
+
+                // 显示登录界面
                 showAuthOverlay();
-                setSyncStatus('');
             });
+
 
             // 设置里：立即同步（当前为“全量 upsert”演示版；后续会升级为增量 outbox）
             document.getElementById('syncNowBtn')?.addEventListener('click', async () => {
