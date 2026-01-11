@@ -1362,34 +1362,46 @@ applyRemoteRows(rows) {
     const list = Array.isArray(rows) ? rows : [];
     let upserts = 0, deletes = 0;
 
+    // ✅ 新语义：
+    // - vip_users.deleted = true  => 进入回收站（可恢复）
+    // - vip_users.purged  = true  => 彻底删除 tombstone（不显示，用于多端一致性）
     this._suppressOps = true;
     try {
         list.forEach(row => {
             const id = String(row?.user_id || '');
             if (!id) return;
 
-            if (row.deleted) {
-                if (this.users[id]) delete this.users[id];
+            const data = (row && row.data && typeof row.data === 'object') ? row.data : {};
+            const deleted = Boolean((row && typeof row.deleted === 'boolean') ? row.deleted : data.deleted);
+            const purged = Boolean((row && typeof row.purged === 'boolean') ? row.purged : data.purged);
 
-                this._dirtyDeletes.add(id);
-                this._dirtyUpserts.delete(id);
+            const prev = this.users[id] || {};
+            const next = {
+                ...prev,
+                ...data,
+                id,
+                deleted,
+                purged,
+            };
 
-                // 从最近浏览移除
+            // 尽量保留删除时间（如果云端没有，则本地补一个）
+            if (deleted && !next._deletedAt) next._deletedAt = Date.now();
+            if (purged && !next._purgedAt) next._purgedAt = Date.now();
+
+            this.users[id] = next;
+
+            // 标记脏写入（保存到 IndexedDB）
+            this._dirtyUpserts.add(id);
+            this._dirtyDeletes.delete(id);
+
+            // 删除/彻底删除：从最近浏览移除
+            if (deleted || purged) {
                 this.recentViewed = Array.isArray(this.recentViewed)
-                    ? this.recentViewed.filter(x => x !== id && (x && x.id) !== id)
+                    ? this.recentViewed.filter(x => x !== id)
                     : [];
-
-                deletes++;
-            } else {
-                const data = row?.data || {};
-                if (!data.id) data.id = id;
-                this.users[id] = data;
-
-                this._dirtyUpserts.add(id);
-                this._dirtyDeletes.delete(id);
-
-                upserts++;
             }
+
+            upserts += 1;
         });
     } finally {
         this._suppressOps = false;
@@ -1397,8 +1409,8 @@ applyRemoteRows(rows) {
 
     this.saveData();
     return { upserts, deletes };
-            }
-    
+}
+
             // 迁移旧 localStorage → IndexedDB（只做一次）
             async _migrateLegacyLocalStorageOnce() {
                 if (!this.db) return;
@@ -1464,12 +1476,29 @@ applyRemoteRows(rows) {
                 return true;
             }
     
-    // 获取所有用户
-            getAllUsers() {
-                return Object.values(this.users);
+    // 获取所有用户（默认不包含 deleted/purged）
+            getAllUsers(options = {}) {
+                const opts = options || {};
+                const includeDeleted = Boolean(opts.includeDeleted);
+                const includePurged = Boolean(opts.includePurged);
+
+                const list = Object.values(this.users || {});
+                return list.filter(u => {
+                    const del = Boolean(u && u.deleted);
+                    const purged = Boolean(u && u.purged);
+                    if (!includePurged && purged) return false;
+                    if (!includeDeleted && del) return false;
+                    return true;
+                });
             }
 
-            // 获取用户
+            // 获取回收站用户（deleted=true 且未 purged）
+            getTrashUsers() {
+                return this.getAllUsers({ includeDeleted: true, includePurged: false })
+                    .filter(u => Boolean(u && u.deleted) && !Boolean(u && u.purged));
+            }
+
+// 获取用户
             getUser(userId) {
                 return this.users[userId];
             }
@@ -1537,128 +1566,109 @@ applyRemoteRows(rows) {
             }
 
 
-            // 删除用户：移动到回收站（可恢复）
+            // 删除用户：移入回收站（软删除：deleted=true，可恢复）
             deleteUser(userId) {
                 const id = String(userId || '');
                 if (!id || !this.users[id]) return false;
 
                 const user = this.users[id];
 
-                // 放入回收站（保留原始 id 方便恢复）
-                const trashItem = {
-                    ...user,
-                    _deletedAt: Date.now(),
-                    _deletedFromId: id
-                };
+                // ✅ 软删除：不从 users 中移除，只标记 deleted=true
+                user.deleted = true;
+                user.purged = false;
+                user._deletedAt = Date.now();
 
-                this.trash = Array.isArray(this.trash) ? this.trash : [];
-                this.trash.unshift(trashItem);
-
-                // 从 users 移除
-                delete this.users[id];
-
-                // 从最近浏览移除
-                this.recentViewed = Array.isArray(this.recentViewed)
-                    ? this.recentViewed.filter(x => x !== id && (x && x.id) !== id)
-                    : [];
-
-                // 日志（后续你再扩展也行）
+                // 记录日志
                 this.logs = Array.isArray(this.logs) ? this.logs : [];
                 this.logs.unshift({
-                    type: 'DELETE_USER',
+                    type: 'MOVE_TO_TRASH',
                     at: Date.now(),
                     userId: id,
                     phone: user.phone || '',
                     tail: user.tail || '',
-                    note: '移入回收站'
+                    note: '移入回收站（deleted=true）'
                 });
 
-                this._onUserDelete(id);
+                // 作为一次 upsert 同步到云端 vip_users（而不是 vip_meta）
+                this._onUserUpsert(id);
                 return true;
             }
 
-            // 回收站：彻底删除单条（不可恢复）
-            purgeTrashItem(trashIndex) {
-                const idx = Number(trashIndex);
-                if (!Number.isFinite(idx)) return false;
+            // 回收站：彻底删除单条（不可恢复）——将 purged=true（不再显示）
+            purgeTrashItem(userId) {
+                const id = String(userId || '');
+                if (!id || !this.users[id]) return false;
 
-                if (!Array.isArray(this.trash) || !this.trash[idx]) return false;
-
-                const item = this.trash[idx];
-                this.trash.splice(idx, 1);
+                const user = this.users[id];
+                // ✅ 彻底删除：保留一条 tombstone（deleted=true & purged=true），用于多端同步清理
+                user.deleted = true;
+                user.purged = true;
+                user._purgedAt = Date.now();
 
                 this.logs = Array.isArray(this.logs) ? this.logs : [];
                 this.logs.unshift({
-                    type: 'PURGE_TRASH_ITEM',
+                    type: 'PURGE_USER',
                     at: Date.now(),
-                    userId: item._deletedFromId || item.id || '',
-                    note: '回收站彻底删除'
+                    userId: id,
+                    phone: user.phone || '',
+                    tail: user.tail || '',
+                    note: '回收站彻底删除（purged=true）'
                 });
 
-                this.saveData();
-                // ✅ 仅改回收站/日志也要同步到云端（vip_meta）
-                window.scheduleAutoSync?.('trash');
+                this._onUserUpsert(id);
                 return true;
             }
 
-            // 回收站：清空（不可恢复）
+            // 回收站：清空（不可恢复）——将所有 deleted=true 的用户标记 purged=true
             clearTrash() {
-                const count = Array.isArray(this.trash) ? this.trash.length : 0;
-                this.trash = [];
+                const trashUsers = this.getTrashUsers();
+                const count = trashUsers.length;
+
+                if (count === 0) return true;
+
+                trashUsers.forEach(u => {
+                    if (!u) return;
+                    u.deleted = true;
+                    u.purged = true;
+                    u._purgedAt = Date.now();
+                    this._onUserUpsert(u.id);
+                });
 
                 this.logs = Array.isArray(this.logs) ? this.logs : [];
                 this.logs.unshift({
                     type: 'CLEAR_TRASH',
                     at: Date.now(),
                     count,
-                    note: '清空回收站'
+                    note: '清空回收站（批量 purged=true）'
                 });
 
-                this.saveData();
-                window.scheduleAutoSync?.('trash');
                 return true;
             }
 
-            // 从回收站恢复用户
-        restoreFromTrash(trashIndex) {
-            const idx = Number(trashIndex);
-            if (!Number.isFinite(idx)) return false;
+            // 从回收站恢复用户（deleted=false）
+            restoreFromTrash(userId) {
+                const id = String(userId || '');
+                if (!id || !this.users[id]) return false;
 
-            const item = (this.trash || [])[idx];
-            if (!item) return false;
+                const user = this.users[id];
+                user.deleted = false;
+                user.purged = false;
+                delete user._deletedAt;
+                delete user._purgedAt;
 
-            // 1) 还原 userId：优先用删除前的 id
-            const restoredId = item._deletedFromId || item.id;
-            const restoredUser = { ...item };
+                this.logs = Array.isArray(this.logs) ? this.logs : [];
+                this.logs.unshift({
+                    type: 'RESTORE_USER',
+                    at: Date.now(),
+                    userId: id,
+                    phone: user.phone || '',
+                    tail: user.tail || '',
+                    note: '从回收站恢复（deleted=false）'
+                });
 
-            // 2) 清理回收站辅助字段（可选，但建议）
-            delete restoredUser._deletedAt;
-            delete restoredUser._deletedFromId;
-
-            // 3) 放回 users（如果冲突：这里选择覆盖或跳过，你可二选一）
-            // 方案A：如果存在同ID用户，则跳过
-            if (this.users[restoredId]) return false;
-
-            restoredUser.id = restoredId;
-            this.users[restoredId] = restoredUser;
-
-            // 4) 从回收站移除
-            this.trash.splice(idx, 1);
-
-            // 5) 写日志（可选）
-            this.logs.unshift({
-                type: 'RESTORE_USER',
-                at: Date.now(),
-                userId: restoredId,
-                phone: restoredUser.phone || '',
-                tail: restoredUser.tail || '',
-                note: '从回收站恢复用户'
-            });
-
-            // 6) 保存
-            this._onUserUpsert(restoredId);
-            return true;
-        }
+                this._onUserUpsert(id);
+                return true;
+            }
 
 
             // 添加金额
@@ -2091,60 +2101,48 @@ applyRemoteRows(rows) {
         
         function renderTrashList() {
             const trashList = document.getElementById('trashList');
-            const trash = Array.isArray(vipManager.trash) ? vipManager.trash : [];
+            const trash = vipManager.getTrashUsers ? vipManager.getTrashUsers() : [];
 
             if (!trashList) return;
 
-            if (trash.length === 0) {
+            if (!Array.isArray(trash) || trash.length === 0) {
                 trashList.innerHTML = `<div class="text-sm text-gray-500 dark:text-gray-400">回收站为空</div>`;
                 return;
             }
 
-            trashList.innerHTML = trash.map((u, idx) => {
+            trashList.innerHTML = trash.map((u) => {
                 const label = u.phone ? u.phone : `尾号 ${u.tail || ''}`;
                 const when = u._deletedAt ? new Date(u._deletedAt).toLocaleString() : '';
                 return `
                   <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between gap-3">
                       <div class="min-w-0">
-                        <div class="font-medium text-gray-800 dark:text-light truncate">${label}</div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-light truncate">${label}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">删除时间：${when}</div>
                       </div>
-
-                      <div class="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          class="restore-trash-btn bg-success hover:bg-success/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
-                          data-idx="${idx}">
-                          恢复
-                        </button>
-                        <button
-                          class="purge-trash-btn bg-danger hover:bg-danger/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
-                          data-idx="${idx}">
-                          彻底删除
-                        </button>
-                        <div class="text-xs text-gray-400">#${idx + 1}</div>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <button class="restore-trash-btn px-3 py-1.5 text-xs rounded-md bg-green-600 hover:bg-green-700 text-white"
+                          data-id="${u.id}">恢复</button>
+                        <button class="purge-trash-btn px-3 py-1.5 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white"
+                          data-id="${u.id}">彻底删除</button>
                       </div>
                     </div>
                   </div>
                 `;
             }).join('');
 
-            // ✅ 事件委托：恢复 / 彻底删除
+            // 事件委托
             trashList.onclick = (e) => {
                 const restoreBtn = e.target.closest('.restore-trash-btn');
                 const purgeBtn = e.target.closest('.purge-trash-btn');
 
                 if (restoreBtn) {
-                    const idx = restoreBtn.getAttribute('data-idx');
-                    const ok = vipManager.restoreFromTrash(idx);
+                    const id = restoreBtn.getAttribute('data-id');
+                    const ok = vipManager.restoreFromTrash(id);
                     if (!ok) {
-                        alert('恢复失败：可能该用户ID已存在。');
+                        alert('恢复失败，请重试。');
                         return;
                     }
-                    vipManager.addLog({
-                        type: 'RESTORE_USER',
-                        note: `从回收站恢复第 ${Number(idx) + 1} 条用户`
-                    });
                     renderUserList();
                     renderRecentUsers();
                     renderTrashList();
@@ -2152,15 +2150,17 @@ applyRemoteRows(rows) {
                 }
 
                 if (purgeBtn) {
-                    const idx = purgeBtn.getAttribute('data-idx');
+                    const id = purgeBtn.getAttribute('data-id');
                     const okToDelete = confirm('确定要彻底删除该用户吗？该操作不可恢复。');
                     if (!okToDelete) return;
 
-                    const ok = vipManager.purgeTrashItem(idx);
+                    const ok = vipManager.purgeTrashItem(id);
                     if (!ok) {
                         alert('彻底删除失败，请重试。');
                         return;
                     }
+                    renderUserList();
+                    renderRecentUsers();
                     renderTrashList();
                     return;
                 }
@@ -2791,7 +2791,7 @@ settingsModal.classList.remove('hidden');
                 data: {
                     users: vipManager.users || {},
                     recentViewed: vipManager.recentViewed || [],
-                    trash: vipManager.trash || [],
+                    trash: (vipManager.getTrashUsers ? vipManager.getTrashUsers() : []) || [],
                     logs: vipManager.logs || []
                 },
                 settings: {
@@ -2935,6 +2935,34 @@ settingsModal.classList.remove('hidden');
         function applyImport(normalized, mode) {
             const importedUsers = sanitizeUsers(normalized.users);
             const importedRecent = Array.isArray(normalized.recentViewed) ? normalized.recentViewed : [];
+            const importedTrash = Array.isArray(normalized.trash) ? normalized.trash : [];
+            const importedLogs = Array.isArray(normalized.logs) ? normalized.logs : [];
+
+            // ✅ 兼容旧备份：trash 里存的是「被删除的用户对象」
+            // 新版本不再用 vipManager.trash 数组，而是用 users[id].deleted=true 表示进入回收站
+            const applyTrashToUsersObj = (usersObj, trashArr) => {
+                if (!usersObj || typeof usersObj !== 'object') return;
+                (trashArr || []).forEach(item => {
+                    if (!item) return;
+                    const rawId = (typeof item === 'object') ? (item._deletedFromId || item.id) : item;
+                    const id = String(rawId || '');
+                    if (!id) return;
+
+                    const base = (typeof item === 'object') ? { ...item } : {};
+                    const u = usersObj[id] ? { ...usersObj[id] } : base;
+
+                    u.id = u.id || id;
+                    u.deleted = true;
+                    u.purged = Boolean(u.purged);
+                    if (!u._deletedAt) u._deletedAt = (typeof item === 'object' && item._deletedAt) ? item._deletedAt : Date.now();
+
+                    delete u._deletedFromId;
+                    usersObj[id] = u;
+                });
+            };
+
+            // 先把 trash 叠加到导入 users（overwrite 模式也能还原回收站）
+            applyTrashToUsersObj(importedUsers, importedTrash);
 
             let added = 0;
             let overwritten = 0;
@@ -2943,20 +2971,14 @@ settingsModal.classList.remove('hidden');
             if (mode === 'overwrite') {
                 vipManager.users = importedUsers;
                 vipManager.recentViewed = importedRecent;
-
-                vipManager.trash = Array.isArray(normalized.trash) ? normalized.trash : [];
-                vipManager.logs = Array.isArray(normalized.logs) ? normalized.logs : [];
+                vipManager.logs = importedLogs;
 
                 applyImportedSettings(normalized.settings);
                 vipManager.saveData();
 
-                return {
-                    added: Object.keys(importedUsers).length,
-                    overwritten: 0,
-                    skipped: 0
-                };
+                added = Object.keys(importedUsers || {}).length;
+                return { added, overwritten, skipped };
             }
-
 
             // merge
             Object.entries(importedUsers).forEach(([id, user]) => {
@@ -2971,6 +2993,9 @@ settingsModal.classList.remove('hidden');
                 }
             });
 
+            // 如果 trash 里有「不在 users 里的条目」，也一并导入并标记 deleted=true
+            applyTrashToUsersObj(vipManager.users, importedTrash);
+
             // recentViewed 合并去重（按 id）
             const currentRecent = Array.isArray(vipManager.recentViewed) ? vipManager.recentViewed : [];
             const seen = new Set(currentRecent.map(x => (x && x.id) ? x.id : x));
@@ -2983,9 +3008,8 @@ settingsModal.classList.remove('hidden');
             });
             vipManager.recentViewed = currentRecent;
 
-            // ✅ merge 模式下：回收站 / 日志直接采用导入数据（建议放这里）
-            vipManager.trash = Array.isArray(normalized.trash) ? normalized.trash : vipManager.trash;
-            vipManager.logs = Array.isArray(normalized.logs) ? normalized.logs : vipManager.logs;
+            // 日志：导入数据优先（没有则保留本地）
+            vipManager.logs = Array.isArray(importedLogs) ? importedLogs : vipManager.logs;
 
             applyImportedSettings(normalized.settings);
             vipManager.saveData();
@@ -3607,7 +3631,8 @@ setSyncStatus('同步中…');
                             owner_id: authedUser.id,
                             user_id: userId,
                             data,
-                            deleted: false,
+                            deleted: Boolean(data && data.deleted),
+                            purged: Boolean(data && data.purged),
                         };
                         if (caps.op_ts) row.op_ts = data.__ts;
                         if (caps.updated_at) row.updated_at = new Date(data.__ts).toISOString();
@@ -3630,8 +3655,7 @@ setSyncStatus('同步中…');
                 try {
                     const metaRows = [
                         { owner_id: authedUser.id, key: 'recentViewed', value: vipManager.recentViewed },
-                        { owner_id: authedUser.id, key: 'trash', value: vipManager.trash },
-                        { owner_id: authedUser.id, key: 'logs', value: vipManager.logs },
+                                                { owner_id: authedUser.id, key: 'logs', value: vipManager.logs },
                     ];
                     const { error } = await supabaseClient
                         .from('vip_meta')
@@ -3647,7 +3671,7 @@ setSyncStatus('同步中…');
                 const state = vipManager.getSyncState();
                 let didIncremental = false;
 
-                let selectCols = 'user_id,data,deleted';
+                let selectCols = 'user_id,data,deleted,purged';
                 if (caps.op_ts) selectCols += ',op_ts';
                 if (caps.updated_at) selectCols += ',updated_at';
 
@@ -3676,7 +3700,7 @@ setSyncStatus('同步中…');
                     console.warn('[pull fallback]', pullUsersErr);
                     const { data, error } = await supabaseClient
                         .from('vip_users')
-                        .select('user_id,data,deleted')
+                        .select('user_id,data,deleted,purged')
                         .eq('owner_id', authedUser.id);
                     if (error) throw error;
                     cloudUsers = data;
@@ -3710,13 +3734,11 @@ setSyncStatus('同步中…');
                         };
 
                         vipManager.recentViewed = __normMeta(metaMap.recentViewed, vipManager.recentViewed || []);
-                        vipManager.trash = __normMeta(metaMap.trash, vipManager.trash || []);
-                        vipManager.logs = __normMeta(metaMap.logs, vipManager.logs || []);
+                                                vipManager.logs = __normMeta(metaMap.logs, vipManager.logs || []);
 
                         // 类型兜底：防止表结构/历史数据把数组变成对象/字符串导致 UI 异常
                         if (!Array.isArray(vipManager.recentViewed)) vipManager.recentViewed = [];
-                        if (!Array.isArray(vipManager.trash)) vipManager.trash = [];
-                        if (!Array.isArray(vipManager.logs)) vipManager.logs = [];
+                                                if (!Array.isArray(vipManager.logs)) vipManager.logs = [];
 
                     }
                 } catch (e) {
@@ -4307,7 +4329,7 @@ setSyncStatus('同步中…');
             const clearTrashBtn = document.getElementById('clearTrashBtn');
             if (clearTrashBtn) {
                 clearTrashBtn.addEventListener('click', () => {
-                    if (!Array.isArray(vipManager.trash) || vipManager.trash.length === 0) return;
+                    if (!vipManager.getTrashUsers || vipManager.getTrashUsers().length === 0) return;
                     const ok = confirm('确定要清空回收站吗？该操作不可恢复。');
                     if (!ok) return;
                     vipManager.clearTrash();
@@ -4498,7 +4520,7 @@ setSyncStatus('同步中…');
 
                 if (clearTrashBtn2) {
                     clearTrashBtn2.addEventListener('click', () => {
-                        if (!Array.isArray(vipManager.trash) || vipManager.trash.length === 0) return;
+                        if (!vipManager.getTrashUsers || vipManager.getTrashUsers().length === 0) return;
                         const ok = confirm('确定要清空回收站吗？该操作不可恢复。');
                         if (!ok) return;
                         vipManager.clearTrash();
