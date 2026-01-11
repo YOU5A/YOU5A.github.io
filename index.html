@@ -21,13 +21,13 @@
             // 覆盖默认的alert函数，防止浏览器弹窗打扰用户
             console.log('Alert called, but overridden to prevent popup.');
         };
-
+        
         function exportLogsOnly() {
             const data = vipManager.logs || [];
             const filename = `vip-logs-${Date.now()}.json`;
             downloadJSON(data, filename);
         }
-
+        
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -56,76 +56,58 @@
             .content-auto {
                 content-visibility: auto;
             }
-
             .card-shadow {
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             }
-
             .hover-scale {
                 transition: transform 0.2s ease-in-out;
             }
-
-                .hover-scale:hover {
-                    transform: scale(1.02);
-                }
-
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
             .slide-up {
                 animation: slideUp 0.3s ease-out forwards;
             }
-
             @keyframes slideUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
             }
-
+            
             .dark .dark\:bg-dark {
                 background-color: #1D2129;
             }
-
             .dark .dark\:bg-darker {
                 background-color: #14171F;
             }
-
             .dark .dark\:text-light {
                 color: #F2F3F5;
             }
-
             .dark .dark\:border-gray-700 {
                 border-color: #2D3239;
             }
-
+            
             /* 暗色主题滚动条 */
             .dark ::-webkit-scrollbar {
                 width: 8px;
             }
-
             .dark ::-webkit-scrollbar-track {
                 background: #2D3239;
             }
-
             .dark ::-webkit-scrollbar-thumb {
                 background: #4B5563;
                 border-radius: 4px;
             }
-
-                .dark ::-webkit-scrollbar-thumb:hover {
-                    background: #6B7280;
-                }
-
+            .dark ::-webkit-scrollbar-thumb:hover {
+                background: #6B7280;
+            }
+            
             /* 修复图表显示 */
             #consumptionChart {
                 display: block !important;
                 width: 100% !important;
                 height: 100% !important;
             }
-
+            
             /* 修复设置选择框箭头 */
             .select-arrow {
                 pointer-events: none;
@@ -134,41 +116,38 @@
                 top: 50%;
                 transform: translateY(-50%);
             }
-
+            
             /* 统计模态框高度限制 */
             .stats-container {
                 max-height: 80vh;
                 overflow-y: auto;
             }
-
+            
             /* 历史记录备注样式 */
             .history-note {
                 font-size: 0.75rem;
                 color: rgba(107, 114, 128, 0.7);
                 margin-top: 2px;
             }
-
             .dark .history-note {
                 color: rgba(156, 163, 175, 0.7);
             }
-
+            
             /* 操作按钮组 */
             .action-buttons {
                 opacity: 0;
                 pointer-events: none; /* 隐藏时不拦截鼠标 */
                 transition: opacity 0.2s ease-in-out;
             }
-
             .history-item:hover .action-buttons {
                 opacity: 1;
                 pointer-events: auto; /* 可见时可以点击 */
             }
-
+            
             /* 历史记录项新样式 */
             .history-record {
                 font-weight: 500;
             }
-
             .history-actions {
                 display: flex;
                 gap: 0.25rem;
@@ -185,7 +164,7 @@
              px-4 py-6
              sm:items-center sm:justify-center sm:overflow-y-hidden sm:px-0 sm:py-0">
 
-        <div class="bg-white dark:bg-dark w-full max-w-lg rounded-2xl shadow-2xl
+            <div class="bg-white dark:bg-dark w-full max-w-lg rounded-2xl shadow-2xl
                         p-4 sm:p-6 mx-auto
                         max-h-[88vh] overflow-y-auto
                         sm:max-h-none sm:overflow-visible">
@@ -208,17 +187,17 @@
                     </div>
                     <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">Project URL</label>
                     <input id="sbUrlInput" type="text" placeholder="https://xxxxx.supabase.co"
-                           class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+                        class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
 
                     <label class="block text-xs text-gray-600 dark:text-gray-300 mt-3 mb-1">Anon Key（publishable）</label>
                     <textarea id="sbAnonInput" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                              class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none"></textarea>
+                        class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none"></textarea>
 
-
+                    
                     <div class="mt-3 space-y-2">
                         <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
                             <input id="autoPullEnabled" type="checkbox" checked
-                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                                class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
                             <span>自动拉取云端更新</span>
                         </label>
 
@@ -226,7 +205,7 @@
                             <span class="text-xs text-gray-600 dark:text-gray-400 w-20">拉取间隔</span>
                             <div class="relative flex-1">
                                 <select id="autoPullInterval"
-                                        class="w-full pl-3 pr-10 py-2 rounded-lg bg-gray-50 dark:bg-dark/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-light focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                                    class="w-full pl-3 pr-10 py-2 rounded-lg bg-gray-50 dark:bg-dark/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-light focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
                                     <option value="10">10 秒</option>
                                     <option value="30" selected>30 秒</option>
                                     <option value="60">60 秒</option>
@@ -240,13 +219,13 @@
 
                         <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
                             <input id="pullOnFocus" type="checkbox" checked
-                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                                class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
                             <span>切回页面自动拉取</span>
                         </label>
 
                         <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
                             <input id="realtimeEnabled" type="checkbox"
-                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                                class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
                             <span>Realtime 实时监听（需要在 Supabase 打开 replication）</span>
                         </label>
 
@@ -255,7 +234,7 @@
                         </p>
                     </div>
 
-                    <div class="flex space-x-3 mt-3">
+<div class="flex space-x-3 mt-3">
                         <button id="sbSaveConfigBtn" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg transition-all">
                             <i class="fa fa-save mr-2"></i>保存配置
                         </button>
@@ -270,12 +249,12 @@
                     <div>
                         <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">邮箱</label>
                         <input id="authEmail" type="email" placeholder="you@example.com"
-                               class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+                            class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
                     </div>
                     <div>
                         <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">密码</label>
                         <input id="authPassword" type="password" placeholder="••••••••"
-                               class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
+                            class="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none" />
                     </div>
                 </div>
 
@@ -316,12 +295,12 @@
                 <div class="flex items-center w-full sm:w-auto gap-2 sm:gap-4">
                     <div class="relative flex-1 sm:flex-none min-w-0">
                         <input type="text" id="globalSearch" placeholder="搜索用户..."
-                               class="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
 
                     <button id="addNewUserBtn"
-                            class="bg-primary hover:bg-primary/90 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-all whitespace-nowrap shrink-0">
+                        class="bg-primary hover:bg-primary/90 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-all whitespace-nowrap shrink-0">
                         <i class="fa fa-plus-circle sm:mr-2"></i>
                         <span class="hidden sm:inline">添加用户</span>
                     </button>
@@ -339,11 +318,11 @@
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-light">用户管理</h2>
                     <div class="flex space-x-2">
                         <button id="refreshBtn"
-                                class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             <i class="fa fa-refresh text-gray-500 dark:text-gray-300"></i>
                         </button>
                         <button id="settingsBtn"
-                                class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             <i class="fa fa-cog text-gray-500 dark:text-gray-300"></i>
                         </button>
                     </div>
@@ -354,9 +333,7 @@
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">最近浏览</h3>
                         <button id="clearRecentBtn"
-                                class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                            清空
-                        </button>
+                            class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">清空</button>
                     </div>
                     <div id="recentUsersList" class="space-y-2 max-h-60 overflow-y-auto">
                         <!-- 动态生成内容 -->
@@ -368,32 +345,32 @@
                     <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">常用功能</h3>
                     <div class="space-y-1">
                         <a href="#" id="allUsersLink"
-                           class="flex items-center p-2 rounded-lg bg-primary/5 text-primary common-function-link">
+                            class="flex items-center p-2 rounded-lg bg-primary/5 text-primary common-function-link">
                             <i class="fa fa-users w-5 h-5 text-center"></i>
                             <span class="ml-3">所有用户</span>
                         </a>
                         <a href="#" id="pinnedUsersLink"
-                           class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
                             <i class="fa fa-star w-5 h-5 text-center"></i>
                             <span class="ml-3">置顶用户</span>
                         </a>
                         <a href="#" id="statsLink"
-                           class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
                             <i class="fa fa-line-chart w-5 h-5 text-center"></i>
                             <span class="ml-3">消费流水</span>
                         </a>
                         <a href="#" id="trashLink"
-                           class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
                             <i class="fa fa-trash w-5 h-5 text-center"></i>
                             <span class="ml-3">回收站</span>
                         </a>
                         <a href="#" id="logsLink"
-                           class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
                             <i class="fa fa-list-alt w-5 h-5 text-center"></i>
                             <span class="ml-3">操作日志</span>
                         </a>
                         <a href="#" id="settingsLink"
-                           class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
+                            class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors common-function-link">
                             <i class="fa fa-cog w-5 h-5 text-center"></i>
                             <span class="ml-3">系统设置</span>
                         </a>
@@ -415,14 +392,15 @@
                         <div class="flex justify-end">
                             <div class="relative">
                                 <select id="filterSelect"
-                                        class="pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                                    class="pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
                                     <option value="all">全部用户</option>
                                     <option value="pinned">置顶用户</option>
                                     <option value="highBalance">余额大于500</option>
                                     <option value="midBalance">余额100-500</option>
                                     <option value="lowBalance">余额小于100</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                                     <i class="fa fa-chevron-down text-xs"></i>
                                 </div>
                             </div>
@@ -437,13 +415,14 @@
 
                 <!-- 无用户提示 -->
                 <div id="noUsersMessage" class="hidden py-12 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                         <i class="fa fa-users text-gray-400 text-2xl"></i>
                     </div>
                     <h3 class="text-xl font-medium text-gray-900 dark:text-light mb-2">暂无VIP用户</h3>
                     <p class="text-gray-500 dark:text-gray-400 mb-4">点击"添加用户"按钮来创建第一个VIP用户</p>
                     <button id="addFirstUserBtn"
-                            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center mx-auto transition-all">
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center mx-auto transition-all">
                         <i class="fa fa-plus-circle mr-2"></i>
                         <span>添加用户</span>
                     </button>
@@ -452,19 +431,20 @@
                 <!-- 分页 -->
                 <div id="paginationContainer" class="mt-8 flex items-center justify-between hidden">
                     <div class="text-sm text-gray-500 dark:text-gray-400">
-                        显示 <span id="showingFrom">1</span> 到 <span id="showingTo">0</span>，共 <span id="totalUsers">0</span> 条
+                        显示 <span id="showingFrom">1</span> 到 <span id="showingTo">0</span>，共 <span
+                            id="totalUsers">0</span> 条
                     </div>
                     <div class="flex space-x-1">
                         <button id="prevPage"
-                                class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-                                disabled>
+                            class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                            disabled>
                             <i class="fa fa-chevron-left"></i>
                         </button>
                         <div id="pageNumbers" class="flex">
                             <!-- 动态生成页码 -->
                         </div>
                         <button id="nextPage"
-                                class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                             <i class="fa fa-chevron-right"></i>
                         </button>
                     </div>
@@ -480,7 +460,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">用户详情</h2>
                     <button id="closeUserDetailModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
@@ -491,8 +471,7 @@
                             <i class="fa fa-user text-2xl"></i>
                         </div>
                         <div class="ml-4">
-                            <h3 id="detailUserId" class="text-2xl font-bold text-gray-900 dark:text-light">
-                                13800138000
+                            <h3 id="detailUserId" class="text-2xl font-bold text-gray-900 dark:text-light">13800138000
                             </h3>
                             <p id="detailUserTail" class="text-gray-500 dark:text-gray-400">尾号: 8000</p>
                         </div>
@@ -514,15 +493,15 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-light mb-4">操作</h3>
                     <div class="flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
                         <button id="addAmountBtn"
-                                class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
+                            class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
                             <i class="fa fa-plus-circle mr-2"></i> 添加金额
                         </button>
                         <button id="subtractAmountBtn"
-                                class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                            class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
                             <i class="fa fa-minus-circle mr-2"></i> 减少金额
                         </button>
                         <button id="togglePinBtn"
-                                class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg transition-all">
+                            class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg transition-all">
                             <i class="fa fa-star mr-2"></i> 置顶用户
                         </button>
                     </div>
@@ -536,7 +515,7 @@
 
                     <div class="mt-4 text-center">
                         <button id="loadMoreHistoryBtn"
-                                class="text-primary hover:text-primary/80 font-medium transition-colors hidden">
+                            class="text-primary hover:text-primary/80 font-medium transition-colors hidden">
                             查看更多记录 <i class="fa fa-chevron-down ml-1"></i>
                         </button>
                     </div>
@@ -552,34 +531,34 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">添加金额</h2>
                     <button id="closeAddAmountModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
 
                 <div class="mb-4">
                     <label for="addAmountInput"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
                     <input type="number" id="addAmountInput"
-                           class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           placeholder="输入金额">
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入金额">
                 </div>
 
                 <div class="mb-6">
                     <label for="addDescriptionInput"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
                     <textarea id="addDescriptionInput" rows="3"
-                              class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                              placeholder="输入备注信息（可选）"></textarea>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入备注信息（可选）"></textarea>
                 </div>
 
                 <div class="flex space-x-3">
                     <button id="cancelAddAmount"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmAddAmount"
-                            class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-success hover:bg-success/90 text-white py-3 rounded-lg transition-all">
                         确认添加
                     </button>
                 </div>
@@ -594,34 +573,34 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">减少金额</h2>
                     <button id="closeSubtractAmountModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
 
                 <div class="mb-4">
                     <label for="subtractAmountInput"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
                     <input type="number" id="subtractAmountInput"
-                           class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           placeholder="输入金额">
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入金额">
                 </div>
 
                 <div class="mb-6">
                     <label for="subtractDescriptionInput"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
                     <textarea id="subtractDescriptionInput" rows="3"
-                              class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                              placeholder="输入备注信息（可选）"></textarea>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入备注信息（可选）"></textarea>
                 </div>
 
                 <div class="flex space-x-3">
                     <button id="cancelSubtractAmount"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmSubtractAmount"
-                            class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
                         确认减少
                     </button>
                 </div>
@@ -636,39 +615,35 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">添加用户</h2>
                     <button id="closeAddUserModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
 
                 <div class="mb-4 flex border-b border-gray-200 dark:border-gray-700">
                     <button id="newUserTab"
-                            class="flex-1 py-2 font-medium border-b-2 border-primary text-primary">
-                        新用户
-                    </button>
+                        class="flex-1 py-2 font-medium border-b-2 border-primary text-primary">新用户</button>
                     <button id="oldUserTab"
-                            class="flex-1 py-2 font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent">
-                        旧用户
-                    </button>
+                        class="flex-1 py-2 font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent">旧用户</button>
                 </div>
 
                 <!-- 新用户表单 -->
                 <div id="newUserForm" class="mb-4">
                     <div class="mb-4">
                         <label for="newUserPhone"
-                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">手机号 (11位)</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">手机号 (11位)</label>
                         <input type="text" id="newUserPhone"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                               placeholder="输入手机号">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="输入手机号">
                         <p id="phoneError" class="text-danger text-xs mt-1 hidden">请输入有效的11位手机号</p>
                     </div>
 
                     <div class="mb-6">
                         <label for="newUserInitialAmount"
-                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
                         <input type="number" id="newUserInitialAmount"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                               placeholder="输入初始金额" value="0">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="输入初始金额" value="0">
                     </div>
                 </div>
 
@@ -676,29 +651,29 @@
                 <div id="oldUserForm" class="mb-4 hidden">
                     <div class="mb-4">
                         <label for="oldUserTail"
-                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">尾号 (4位数字)</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">尾号 (4位数字)</label>
                         <input type="text" id="oldUserTail"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                               placeholder="输入4位尾号">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="输入4位尾号">
                         <p id="tailError" class="text-danger text-xs mt-1 hidden">请输入有效的4位尾号</p>
                     </div>
 
                     <div class="mb-6">
                         <label for="oldUserInitialAmount"
-                               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">初始金额 (元)</label>
                         <input type="number" id="oldUserInitialAmount"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                               placeholder="输入初始金额" value="0">
+                            class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="输入初始金额" value="0">
                     </div>
                 </div>
 
                 <div class="flex space-x-3">
                     <button id="cancelAddUser"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmAddUser"
-                            class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
                         确认添加
                     </button>
                 </div>
@@ -720,11 +695,11 @@
 
                 <div class="flex space-x-3">
                     <button id="cancelDeleteUser"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmDeleteUser"
-                            class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
                         确认删除
                     </button>
                 </div>
@@ -739,16 +714,16 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">编辑历史记录</h2>
                     <button id="closeEditHistoryModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
 
                 <div class="mb-4">
                     <label for="editHistoryType"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">操作类型</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">操作类型</label>
                     <select id="editHistoryType"
-                            class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
                         <option value="add">充值</option>
                         <option value="subtract">消费</option>
                     </select>
@@ -756,27 +731,27 @@
 
                 <div class="mb-4">
                     <label for="editHistoryAmount"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">金额 (元)</label>
                     <input type="number" id="editHistoryAmount"
-                           class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                           placeholder="输入金额">
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入金额">
                 </div>
 
                 <div class="mb-6">
                     <label for="editHistoryDescription"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">备注</label>
                     <textarea id="editHistoryDescription" rows="3"
-                              class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                              placeholder="输入备注信息（可选）"></textarea>
+                        class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="输入备注信息（可选）"></textarea>
                 </div>
 
                 <div class="flex space-x-3">
                     <button id="cancelEditHistory"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmEditHistory"
-                            class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
                         确认修改
                     </button>
                 </div>
@@ -798,11 +773,11 @@
 
                 <div class="flex space-x-3">
                     <button id="cancelDeleteHistory"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="confirmDeleteHistory"
-                            class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-danger hover:bg-danger/90 text-white py-3 rounded-lg transition-all">
                         确认删除
                     </button>
                 </div>
@@ -812,22 +787,22 @@
 
     <!-- 设置模态框 -->
     <div id="settingsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-dark rounded-xl w-[92vw] sm:w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+        <div class="bg-white dark:bg-dark rounded-xl w-[92vw] sm:w-full sm:max-w-md max-h-[85vh] overflow-y-auto overflow-x-hidden sm:max-h-none sm:overflow-y-visible sm:overflow-x-hidden">
             <div class="p-4 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">系统设置</h2>
                     <button id="closeSettingsModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
 
                 <div class="mb-4">
                     <label for="usersPerPage"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">每页显示用户数</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">每页显示用户数</label>
                     <div class="relative">
                         <select id="usersPerPage"
-                                class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                            class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
                             <option value="6">6</option>
                             <option value="12">12</option>
                             <option value="24">24</option>
@@ -841,10 +816,10 @@
 
                 <div class="mb-4">
                     <label for="currencySelect"
-                           class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">默认货币</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">默认货币</label>
                     <div class="relative">
                         <select id="currencySelect"
-                                class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                            class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
                             <option value="CNY">人民币 (CNY)</option>
                             <option value="USD">美元 (USD)</option>
                         </select>
@@ -858,13 +833,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">主题</label>
                     <div class="flex space-x-2">
                         <button data-theme="light"
-                                class="theme-btn bg-white border border-gray-300 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
+                            class="theme-btn bg-white border border-gray-300 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
                         <button data-theme="dark"
-                                class="theme-btn bg-gray-800 border border-gray-700 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
+                            class="theme-btn bg-gray-800 border border-gray-700 rounded-lg p-2 w-10 h-10 focus:ring-2 focus:ring-primary"></button>
                     </div>
                 </div>
 
-
+                
                 <!-- 数据备份 / 导入导出 -->
                 <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h3 class="text-sm font-semibold text-gray-900 dark:text-light mb-3">数据备份</h3>
@@ -874,7 +849,7 @@
                             <label for="importMode" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">导入模式</label>
                             <div class="relative">
                                 <select id="importMode"
-                                        class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-dark text-gray-900 dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
+                                    class="w-full pl-3 pr-10 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-dark text-gray-900 dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none">
                                     <option value="overwrite">覆盖本地数据（推荐先导出备份）</option>
                                     <option value="merge_keep_local">合并：保留本地（同ID跳过导入）</option>
                                     <option value="merge_overwrite">合并：同ID用导入覆盖</option>
@@ -887,18 +862,18 @@
 
                         <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 select-none">
                             <input id="autoBackupBeforeImport" type="checkbox" checked
-                                   class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
+                                class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50">
                             <span>覆盖导入前自动导出一份备份</span>
                         </label>
 
                         <div class="flex space-x-3">
                             <button id="exportDataBtn"
-                                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-2.5 rounded-lg transition-all">
+                                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-2.5 rounded-lg transition-all">
                                 <i class="fa fa-download mr-2"></i>导出JSON
                             </button>
 
                             <button id="importDataBtn"
-                                    class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
+                                class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
                                 <i class="fa fa-upload mr-2"></i>导入JSON
                             </button>
 
@@ -917,11 +892,11 @@
 
                     <div class="flex space-x-3 mt-3">
                         <button id="syncNowBtn"
-                                class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
+                            class="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg transition-all">
                             <i class="fa fa-cloud mr-2"></i>立即同步
                         </button>
                         <button id="logoutBtn"
-                                class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2.5 rounded-lg transition-all">
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2.5 rounded-lg transition-all">
                             <i class="fa fa-sign-out mr-2"></i>退出登录
                         </button>
                     </div>
@@ -929,15 +904,15 @@
                     <p id="syncStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2 hidden"></p>
                 </div>
 
-                <div class="h-4"></div>
+<div class="h-4"></div>
 
-                <div class="flex space-x-3">
+<div class="flex space-x-3">
                     <button id="cancelSettings"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:text-gray-900 py-3 rounded-lg transition-all">
                         取消
                     </button>
                     <button id="saveSettings"
-                            class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
+                        class="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-all">
                         保存设置
                     </button>
                 </div>
@@ -952,22 +927,22 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">回收站</h2>
                     <button id="closeTrashModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
-
+    
                 <div id="trashList" class="space-y-2">
                     <!-- renderTrashList() 往这里塞内容 -->
                 </div>
-
+    
                 <div class="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
                     <button id="clearTrashBtn"
-                            class="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-lg transition-all">
+                        class="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-lg transition-all">
                         清空回收站
                     </button>
                     <button id="closeTrashBtn"
-                            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
                         关闭
                     </button>
                 </div>
@@ -982,11 +957,11 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">操作日志</h2>
                     <button id="closeLogsModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
-
+    
                 <!-- 顶部工具条 -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <!-- 左侧：说明 + 筛选 -->
@@ -994,36 +969,36 @@
                         <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
                             仅保存在本机浏览器 localStorage
                         </div>
-
+    
                         <select id="logTypeFilter"
-                                class="text-sm px-2 py-1 rounded border border-gray-200 dark:border-gray-600 dark:bg-dark dark:text-light">
+                            class="text-sm px-2 py-1 rounded border border-gray-200 dark:border-gray-600 dark:bg-dark dark:text-light">
                             <option value="all">全部类型</option>
                         </select>
                     </div>
-
+    
                     <!-- 右侧：操作按钮 -->
                     <div class="flex items-center gap-3 justify-end">
                         <!-- 如果你已经加了 exportLogsOnly() 就保留这一按钮；没有就删掉这行 -->
                         <button type="button" onclick="exportLogsOnly()"
-                                class="text-sm px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-light transition-all">
+                            class="text-sm px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-light transition-all">
                             导出 JSON
                         </button>
-
+    
                         <button id="clearLogsBtn" class="text-sm text-danger hover:text-danger/80 font-medium">
                             清空日志
                         </button>
                     </div>
                 </div>
-
+    
                 <!-- 列表 -->
                 <div id="logsList" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                     <!-- renderLogsList() 往这里塞内容 -->
                 </div>
-
+    
                 <!-- 底部 -->
                 <div class="mt-4 text-center">
                     <button id="closeLogsBtn"
-                            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
                         关闭
                     </button>
                 </div>
@@ -1040,7 +1015,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">消费流水</h2>
                     <button id="closeStatsModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
@@ -1049,21 +1024,21 @@
                     <div class="flex flex-wrap gap-4">
                         <div>
                             <label for="startDate"
-                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">开始日期</label>
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">开始日期</label>
                             <input type="date" id="startDate"
-                                   class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
                         </div>
                         <div>
                             <label for="endDate"
-                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">结束日期</label>
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">结束日期</label>
                             <input type="date" id="endDate"
-                                   class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-dark dark:text-light focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
                         </div>
                         <div id="statsStatus" class="mt-2 text-sm text-gray-500 dark:text-gray-400 hidden">
                         </div>
                         <div class="self-end">
                             <button id="updateChartBtn"
-                                    class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                                class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
                                 更新图表
                             </button>
                         </div>
@@ -1081,23 +1056,17 @@
                         <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
                             <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0">
                                 <tr>
-                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        日期
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">日期
                                     </th>
-                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        期初余额
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">期初余额
                                     </th>
-                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        充值金额
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">充值金额
                                     </th>
-                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        消费金额
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">消费金额
                                     </th>
-                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        期末余额
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">期末余额
                                     </th>
-                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        当日净增减
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">当日净增减
                                     </th>
                                 </tr>
                             </thead>
@@ -1110,7 +1079,7 @@
 
                 <div class="mt-4 text-center">
                     <button id="closeStatsBtn"
-                            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all">
                         关闭
                     </button>
                 </div>
@@ -1119,7 +1088,8 @@
     </div>
 
     <!-- 移动端底部导航 (仅在小屏幕显示) -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark shadow-lg border-t border-gray-200 dark:border-gray-700 py-2 px-4 z-20">
+    <div
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark shadow-lg border-t border-gray-200 dark:border-gray-700 py-2 px-4 z-20">
         <div class="flex justify-around">
             <a href="#" id="mobileUsersLink" class="flex flex-col items-center text-primary">
                 <i class="fa fa-users text-lg"></i>
@@ -1137,7 +1107,8 @@
     </div>
 
     <!-- 版权信息 -->
-    <footer class="py-4 text-center text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-dark border-t border-gray-100 dark:border-gray-800">
+    <footer
+        class="py-4 text-center text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-dark border-t border-gray-100 dark:border-gray-800">
         © pfmaxlnx@gmail.com 2019-2026 All rights reserved
     </footer>
 
@@ -1172,13 +1143,13 @@
                 // ✅ 应用云端变更时：不再把变更重新写回 outbox（避免循环）
                 this._suppressOps = false;
             }
-
+    
             /**
              * 初始化：为当前登录用户打开独立的本地数据库，并加载数据
              */
             async init(userId) {
                 // 重新登录时，先关闭旧库
-                try { this.db?.close?.(); } catch (_) { }
+                try { this.db?.close?.(); } catch (_) {}
                 this.db = null;
 
                 if (!window.Dexie) throw new Error('Dexie 未加载：请检查 dexie.min.js 是否成功引入');
@@ -1202,7 +1173,7 @@
                 await this.db.open();
 
                 // 尽量申请持久化存储（减少被系统自动清理的概率）
-                try { await navigator.storage?.persist?.(); } catch (_) { }
+                try { await navigator.storage?.persist?.(); } catch (_) {}
 
                 // ✅ 一次性迁移旧 localStorage（如果有）
                 await this._migrateLegacyLocalStorageOnce();
@@ -1241,7 +1212,7 @@
                 this._dirtyDeletes.clear();
                 this._outboxDeletedKeys.clear();
             }
-
+    
             // 保存数据到 IndexedDB（Dexie）——轻度防抖，避免频繁写入
             saveData() {
                 if (!this.db) return; // 未初始化（未登录）时，不写入
@@ -1291,173 +1262,173 @@
                 this._outboxDeletedKeys.clear();
             }
 
-            // 立即落盘（用于“同步前先把 outbox 写进去”）
-            async flushNow() {
-                if (!this.db) return;
-                clearTimeout(this._saveTimer);
-                await this._flushSave();
-            }
+// 立即落盘（用于“同步前先把 outbox 写进去”）
+async flushNow() {
+    if (!this.db) return;
+    clearTimeout(this._saveTimer);
+    await this._flushSave();
+}
 
-            getSyncState() {
-                return this._syncState || { lastOpTs: 0, lastUpdatedAt: null };
-            }
+getSyncState() {
+    return this._syncState || { lastOpTs: 0, lastUpdatedAt: null };
+}
 
-            setSyncState(nextState) {
-                this._syncState = nextState || { lastOpTs: 0, lastUpdatedAt: null };
-                this.saveData();
-            }
+setSyncState(nextState) {
+    this._syncState = nextState || { lastOpTs: 0, lastUpdatedAt: null };
+    this.saveData();
+}
 
-            // 内部：标记用户发生变更（upsert）
-            _onUserUpsert(userId) {
-                const id = String(userId || '');
-                const user = this.users[id];
-                if (!id || !user) return;
+// 内部：标记用户发生变更（upsert）
+_onUserUpsert(userId) {
+    const id = String(userId || '');
+    const user = this.users[id];
+    if (!id || !user) return;
 
-                const ts = Date.now();
-                user.__ts = ts; // 本地“最后修改时间”（用于冲突调试/未来增量同步）
+    const ts = Date.now();
+    user.__ts = ts; // 本地“最后修改时间”（用于冲突调试/未来增量同步）
 
-                // 本地落盘
-                this._dirtyUpserts.add(id);
-                this._dirtyDeletes.delete(id);
+    // 本地落盘
+    this._dirtyUpserts.add(id);
+    this._dirtyDeletes.delete(id);
 
-                // outbox（仅在正常用户操作时写入；应用云端变更时 suppress）
-                if (!this._suppressOps) {
-                    const upKey = `upsert:${id}`;
-                    const delKey = `delete:${id}`;
+    // outbox（仅在正常用户操作时写入；应用云端变更时 suppress）
+    if (!this._suppressOps) {
+        const upKey = `upsert:${id}`;
+        const delKey = `delete:${id}`;
 
-                    this._outboxMap.set(upKey, { key: upKey, type: 'upsert', user_id: id, payload: user, ts });
+        this._outboxMap.set(upKey, { key: upKey, type: 'upsert', user_id: id, payload: user, ts });
 
-                    // 如果之前排队了 delete，则撤销 delete
-                    if (this._outboxMap.has(delKey)) {
-                        this._outboxMap.delete(delKey);
-                        this._outboxDeletedKeys.add(delKey);
-                    }
-                    // ✅ 自动同步（防止你忘记点“同步”）
-                    window.scheduleAutoSync?.('upsert');
-                }
+        // 如果之前排队了 delete，则撤销 delete
+        if (this._outboxMap.has(delKey)) {
+            this._outboxMap.delete(delKey);
+            this._outboxDeletedKeys.add(delKey);
+        }
+        // ✅ 自动同步（防止你忘记点“同步”）
+        window.scheduleAutoSync?.('upsert');
+    }
 
-                this.saveData();
-            }
+    this.saveData();
+}
 
-            // 内部：标记用户被删除（tombstone）
-            _onUserDelete(userId) {
-                const id = String(userId || '');
-                if (!id) return;
+// 内部：标记用户被删除（tombstone）
+_onUserDelete(userId) {
+    const id = String(userId || '');
+    if (!id) return;
 
-                // 本地落盘
+    // 本地落盘
+    this._dirtyDeletes.add(id);
+    this._dirtyUpserts.delete(id);
+
+    if (!this._suppressOps) {
+        const ts = Date.now();
+        const delKey = `delete:${id}`;
+        const upKey = `upsert:${id}`;
+
+        this._outboxMap.set(delKey, { key: delKey, type: 'delete', user_id: id, payload: null, ts });
+
+        // 如果之前排队了 upsert，则撤销 upsert
+        if (this._outboxMap.has(upKey)) {
+            this._outboxMap.delete(upKey);
+            this._outboxDeletedKeys.add(upKey);
+        }
+        // ✅ 自动同步（防止你忘记点“同步”）
+        window.scheduleAutoSync?.('delete');
+    }
+
+    this.saveData();
+}
+
+// 供同步使用：获取 outbox（按时间升序）
+getOutboxOps() {
+    return Array.from(this._outboxMap.values())
+        .filter(Boolean)
+        .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+}
+
+// 供同步使用：清除已成功 push 的 outbox
+async clearOutboxKeys(keys) {
+    const arr = Array.isArray(keys) ? keys : [];
+    arr.forEach(k => {
+        if (this._outboxMap.has(k)) {
+            this._outboxMap.delete(k);
+            this._outboxDeletedKeys.add(k);
+        }
+    });
+    this.saveData();
+}
+
+// 供同步使用：应用云端变更（不会写回 outbox）
+applyRemoteRows(rows) {
+    const list = Array.isArray(rows) ? rows : [];
+    let upserts = 0, deletes = 0;
+
+    this._suppressOps = true;
+    try {
+        list.forEach(row => {
+            const id = String(row?.user_id || '');
+            if (!id) return;
+
+            if (row.deleted) {
+                if (this.users[id]) delete this.users[id];
+
                 this._dirtyDeletes.add(id);
                 this._dirtyUpserts.delete(id);
 
-                if (!this._suppressOps) {
-                    const ts = Date.now();
-                    const delKey = `delete:${id}`;
-                    const upKey = `upsert:${id}`;
+                // 从最近浏览移除
+                this.recentViewed = Array.isArray(this.recentViewed)
+                    ? this.recentViewed.filter(x => x !== id && (x && x.id) !== id)
+                    : [];
 
-                    this._outboxMap.set(delKey, { key: delKey, type: 'delete', user_id: id, payload: null, ts });
+                deletes++;
+            } else {
+                const data = row?.data || {};
+                if (!data.id) data.id = id;
+                this.users[id] = data;
 
-                    // 如果之前排队了 upsert，则撤销 upsert
-                    if (this._outboxMap.has(upKey)) {
-                        this._outboxMap.delete(upKey);
-                        this._outboxDeletedKeys.add(upKey);
-                    }
-                    // ✅ 自动同步（防止你忘记点“同步”）
-                    window.scheduleAutoSync?.('delete');
-                }
+                this._dirtyUpserts.add(id);
+                this._dirtyDeletes.delete(id);
 
-                this.saveData();
+                upserts++;
             }
+        });
+    } finally {
+        this._suppressOps = false;
+    }
 
-            // 供同步使用：获取 outbox（按时间升序）
-            getOutboxOps() {
-                return Array.from(this._outboxMap.values())
-                    .filter(Boolean)
-                    .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    this.saveData();
+    return { upserts, deletes };
             }
-
-            // 供同步使用：清除已成功 push 的 outbox
-            async clearOutboxKeys(keys) {
-                const arr = Array.isArray(keys) ? keys : [];
-                arr.forEach(k => {
-                    if (this._outboxMap.has(k)) {
-                        this._outboxMap.delete(k);
-                        this._outboxDeletedKeys.add(k);
-                    }
-                });
-                this.saveData();
-            }
-
-            // 供同步使用：应用云端变更（不会写回 outbox）
-            applyRemoteRows(rows) {
-                const list = Array.isArray(rows) ? rows : [];
-                let upserts = 0, deletes = 0;
-
-                this._suppressOps = true;
-                try {
-                    list.forEach(row => {
-                        const id = String(row?.user_id || '');
-                        if (!id) return;
-
-                        if (row.deleted) {
-                            if (this.users[id]) delete this.users[id];
-
-                            this._dirtyDeletes.add(id);
-                            this._dirtyUpserts.delete(id);
-
-                            // 从最近浏览移除
-                            this.recentViewed = Array.isArray(this.recentViewed)
-                                ? this.recentViewed.filter(x => x !== id && (x && x.id) !== id)
-                                : [];
-
-                            deletes++;
-                        } else {
-                            const data = row?.data || {};
-                            if (!data.id) data.id = id;
-                            this.users[id] = data;
-
-                            this._dirtyUpserts.add(id);
-                            this._dirtyDeletes.delete(id);
-
-                            upserts++;
-                        }
-                    });
-                } finally {
-                    this._suppressOps = false;
-                }
-
-                this.saveData();
-                return { upserts, deletes };
-            }
-
+    
             // 迁移旧 localStorage → IndexedDB（只做一次）
             async _migrateLegacyLocalStorageOnce() {
                 if (!this.db) return;
-
+    
                 const migrated = await this.db.meta.get('legacy_migrated_v1');
                 if (migrated?.value) return;
-
+    
                 const legacyUsersRaw = localStorage.getItem('vipManagerUsers');
                 const legacyRecentRaw = localStorage.getItem('recentViewed');
                 const legacyTrashRaw = localStorage.getItem('vipManagerTrash');
                 const legacyLogsRaw = localStorage.getItem('vipManagerLogs');
-
+    
                 // 没有任何旧数据，也标记成已迁移（避免每次打开都检查）
                 if (!legacyUsersRaw && !legacyRecentRaw && !legacyTrashRaw && !legacyLogsRaw) {
                     await this.db.meta.put({ key: 'legacy_migrated_v1', value: true, at: Date.now() });
                     return;
                 }
-
+    
                 let legacyUsers = {};
                 try { legacyUsers = legacyUsersRaw ? JSON.parse(legacyUsersRaw) : {}; } catch (_) { legacyUsers = {}; }
-
+    
                 let legacyRecent = [];
                 let legacyTrash = [];
                 let legacyLogs = [];
-                try { legacyRecent = legacyRecentRaw ? JSON.parse(legacyRecentRaw) : []; } catch (_) { }
-                try { legacyTrash = legacyTrashRaw ? JSON.parse(legacyTrashRaw) : []; } catch (_) { }
-                try { legacyLogs = legacyLogsRaw ? JSON.parse(legacyLogsRaw) : []; } catch (_) { }
-
+                try { legacyRecent = legacyRecentRaw ? JSON.parse(legacyRecentRaw) : []; } catch (_) {}
+                try { legacyTrash = legacyTrashRaw ? JSON.parse(legacyTrashRaw) : []; } catch (_) {}
+                try { legacyLogs = legacyLogsRaw ? JSON.parse(legacyLogsRaw) : []; } catch (_) {}
+    
                 const userArr = Object.values(legacyUsers);
-
+    
                 await this.db.transaction('rw', this.db.users, this.db.meta, async () => {
                     if (userArr.length) await this.db.users.bulkPut(userArr);
                     await this.db.meta.put({ key: 'recentViewed', value: legacyRecent });
@@ -1465,14 +1436,14 @@
                     await this.db.meta.put({ key: 'logs', value: legacyLogs });
                     await this.db.meta.put({ key: 'legacy_migrated_v1', value: true, at: Date.now() });
                 });
-
+    
                 // 迁移完清理旧 localStorage（避免重复导入）
                 localStorage.removeItem('vipManagerUsers');
                 localStorage.removeItem('recentViewed');
                 localStorage.removeItem('vipManagerTrash');
                 localStorage.removeItem('vipManagerLogs');
             }
-
+    
             addLog(entry) {
                 this.logs = Array.isArray(this.logs) ? this.logs : [];
                 this.logs.unshift({
@@ -1485,15 +1456,15 @@
                 // ✅ meta 也需要自动同步（否则只改日志时要等别的操作才会上云）
                 window.scheduleAutoSync?.('logs');
             }
-
+    
             clearLogs() {
                 this.logs = [];
                 this.saveData();
                 window.scheduleAutoSync?.('logs');
                 return true;
             }
-
-            // 获取所有用户
+    
+    // 获取所有用户
             getAllUsers() {
                 return Object.values(this.users);
             }
@@ -1649,45 +1620,45 @@
             }
 
             // 从回收站恢复用户
-            restoreFromTrash(trashIndex) {
-                const idx = Number(trashIndex);
-                if (!Number.isFinite(idx)) return false;
+        restoreFromTrash(trashIndex) {
+            const idx = Number(trashIndex);
+            if (!Number.isFinite(idx)) return false;
 
-                const item = (this.trash || [])[idx];
-                if (!item) return false;
+            const item = (this.trash || [])[idx];
+            if (!item) return false;
 
-                // 1) 还原 userId：优先用删除前的 id
-                const restoredId = item._deletedFromId || item.id;
-                const restoredUser = { ...item };
+            // 1) 还原 userId：优先用删除前的 id
+            const restoredId = item._deletedFromId || item.id;
+            const restoredUser = { ...item };
 
-                // 2) 清理回收站辅助字段（可选，但建议）
-                delete restoredUser._deletedAt;
-                delete restoredUser._deletedFromId;
+            // 2) 清理回收站辅助字段（可选，但建议）
+            delete restoredUser._deletedAt;
+            delete restoredUser._deletedFromId;
 
-                // 3) 放回 users（如果冲突：这里选择覆盖或跳过，你可二选一）
-                // 方案A：如果存在同ID用户，则跳过
-                if (this.users[restoredId]) return false;
+            // 3) 放回 users（如果冲突：这里选择覆盖或跳过，你可二选一）
+            // 方案A：如果存在同ID用户，则跳过
+            if (this.users[restoredId]) return false;
 
-                restoredUser.id = restoredId;
-                this.users[restoredId] = restoredUser;
+            restoredUser.id = restoredId;
+            this.users[restoredId] = restoredUser;
 
-                // 4) 从回收站移除
-                this.trash.splice(idx, 1);
+            // 4) 从回收站移除
+            this.trash.splice(idx, 1);
 
-                // 5) 写日志（可选）
-                this.logs.unshift({
-                    type: 'RESTORE_USER',
-                    at: Date.now(),
-                    userId: restoredId,
-                    phone: restoredUser.phone || '',
-                    tail: restoredUser.tail || '',
-                    note: '从回收站恢复用户'
-                });
+            // 5) 写日志（可选）
+            this.logs.unshift({
+                type: 'RESTORE_USER',
+                at: Date.now(),
+                userId: restoredId,
+                phone: restoredUser.phone || '',
+                tail: restoredUser.tail || '',
+                note: '从回收站恢复用户'
+            });
 
-                // 6) 保存
-                this._onUserUpsert(restoredId);
-                return true;
-            }
+            // 6) 保存
+            this._onUserUpsert(restoredId);
+            return true;
+        }
 
 
             // 添加金额
@@ -1827,24 +1798,24 @@
 
             // 筛选用户
             filterUsers(filterType) {
-                const users = this.getAllUsers();
+            const users = this.getAllUsers();
 
-                // 防止 amount 是字符串/空值，统一转成数字
-                const getAmount = (u) => Number(u?.amount ?? 0);
+            // 防止 amount 是字符串/空值，统一转成数字
+            const getAmount = (u) => Number(u?.amount ?? 0);
 
-                const rules = {
-                    all: () => true,
-                    pinned: (u) => !!u.pinned,
-                    highBalance: (u) => getAmount(u) > 500,
-                    midBalance: (u) => {
-                        const a = getAmount(u);
-                        return a >= 100 && a <= 500;
-                    },
-                    lowBalance: (u) => getAmount(u) < 100,
-                };
+            const rules = {
+                all: () => true,
+                pinned: (u) => !!u.pinned,
+                highBalance: (u) => getAmount(u) > 500,
+                midBalance: (u) => {
+                    const a = getAmount(u);
+                    return a >= 100 && a <= 500;
+                },
+                lowBalance: (u) => getAmount(u) < 100,
+            };
 
-                return users.filter(rules[filterType] ?? rules.all);
-            }
+            return users.filter(rules[filterType] ?? rules.all);
+        }
 
 
             // 添加最近浏览
@@ -1867,86 +1838,86 @@
             }
 
 
-            // 获取指定时间段的充值/消费流水数据（含期初/期末余额）
-            getConsumptionData(startDate, endDate) {
-                const consumptionData = [];
-                const allUsers = this.getAllUsers();
+        // 获取指定时间段的充值/消费流水数据（含期初/期末余额）
+        getConsumptionData(startDate, endDate) {
+            const consumptionData = [];
+            const allUsers = this.getAllUsers();
 
-                // 统一把 start/end 归一到“本地 00:00”
-                const start = new Date(startDate);
-                start.setHours(0, 0, 0, 0);
-                const end = new Date(endDate);
-                end.setHours(0, 0, 0, 0);
+            // 统一把 start/end 归一到“本地 00:00”
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(0, 0, 0, 0);
 
-                // 初始化日期范围内的数据
-                const dateIndexMap = {};
-                const currentDate = new Date(start);
-                let i = 0;
+            // 初始化日期范围内的数据
+            const dateIndexMap = {};
+            const currentDate = new Date(start);
+            let i = 0;
 
-                while (currentDate <= end) {
-                    const dateStr = toLocalDateKey(currentDate);
-                    consumptionData.push({
-                        date: dateStr,
-                        openingBalance: 0,
-                        recharge: 0,
-                        consumption: 0,
-                        netChange: 0,
-                        closingBalance: 0
-                    });
-                    dateIndexMap[dateStr] = i++;
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-
-                // 当前系统总余额（所有用户 amount 之和）
-                const currentTotalBalance = allUsers.reduce((sum, user) => {
-                    return sum + (parseFloat(user.amount) || 0);
-                }, 0);
-
-                // 从 start(含) 到“现在”的累计变动（用于从当前余额回推出 start 时的期初余额）
-                let deltaAfterStart = 0;
-
-                // 汇总范围内每日充值/消费，同时计算 deltaAfterStart
-                allUsers.forEach(user => {
-                    (user.history || []).forEach(record => {
-                        const recordDate = new Date(record.date);
-                        const amt = parseFloat(record.amount) || 0;
-
-                        // 1) 回推期初余额需要：统计 start 之后发生的所有流水（含 start 当天）
-                        if (recordDate >= start) {
-                            if (record.type === 'subtract') {
-                                deltaAfterStart -= amt;  // subtract = -amt
-                            } else {
-                                deltaAfterStart += amt;  // add = +amt
-                            }
-                        }
-
-                        // 2) 统计区间内每天的流水（按“本地日期”归档）
-                        const dateStr = toLocalDateKey(recordDate);
-                        const idx = dateIndexMap[dateStr];
-                        if (idx !== undefined) {
-                            if (record.type === 'subtract') {
-                                consumptionData[idx].consumption += amt;
-                                consumptionData[idx].netChange -= amt;
-                            } else {
-                                consumptionData[idx].recharge += amt;
-                                consumptionData[idx].netChange += amt;
-                            }
-                        }
-                    });
+            while (currentDate <= end) {
+                const dateStr = toLocalDateKey(currentDate);
+                consumptionData.push({
+                    date: dateStr,
+                    openingBalance: 0,
+                    recharge: 0,
+                    consumption: 0,
+                    netChange: 0,
+                    closingBalance: 0
                 });
-
-                // start 当天 00:00 的期初总余额
-                let runningBalance = currentTotalBalance - deltaAfterStart;
-
-                // 生成每一天的期初/期末
-                consumptionData.forEach(day => {
-                    day.openingBalance = runningBalance;
-                    day.closingBalance = runningBalance + day.netChange;
-                    runningBalance = day.closingBalance;
-                });
-
-                return consumptionData;
+                dateIndexMap[dateStr] = i++;
+                currentDate.setDate(currentDate.getDate() + 1);
             }
+
+            // 当前系统总余额（所有用户 amount 之和）
+            const currentTotalBalance = allUsers.reduce((sum, user) => {
+                return sum + (parseFloat(user.amount) || 0);
+            }, 0);
+
+            // 从 start(含) 到“现在”的累计变动（用于从当前余额回推出 start 时的期初余额）
+            let deltaAfterStart = 0;
+
+            // 汇总范围内每日充值/消费，同时计算 deltaAfterStart
+            allUsers.forEach(user => {
+                (user.history || []).forEach(record => {
+                    const recordDate = new Date(record.date);
+                    const amt = parseFloat(record.amount) || 0;
+
+                    // 1) 回推期初余额需要：统计 start 之后发生的所有流水（含 start 当天）
+                    if (recordDate >= start) {
+                        if (record.type === 'subtract') {
+                            deltaAfterStart -= amt;  // subtract = -amt
+                        } else {
+                            deltaAfterStart += amt;  // add = +amt
+                        }
+                    }
+
+                    // 2) 统计区间内每天的流水（按“本地日期”归档）
+                    const dateStr = toLocalDateKey(recordDate);
+                    const idx = dateIndexMap[dateStr];
+                    if (idx !== undefined) {
+                        if (record.type === 'subtract') {
+                            consumptionData[idx].consumption += amt;
+                            consumptionData[idx].netChange -= amt;
+                        } else {
+                            consumptionData[idx].recharge += amt;
+                            consumptionData[idx].netChange += amt;
+                        }
+                    }
+                });
+            });
+
+            // start 当天 00:00 的期初总余额
+            let runningBalance = currentTotalBalance - deltaAfterStart;
+
+            // 生成每一天的期初/期末
+            consumptionData.forEach(day => {
+                day.openingBalance = runningBalance;
+                day.closingBalance = runningBalance + day.netChange;
+                runningBalance = day.closingBalance;
+            });
+
+            return consumptionData;
+        }
 
 
             // 生成历史记录ID
@@ -1965,20 +1936,20 @@
         }
 
         // —— 日期工具：按本地时区生成 YYYY-MM-DD（避免 UTC 分组导致日期偏移）——
-        function toLocalDateKey(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        }
+            function toLocalDateKey(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
 
-        // HTML <input type="date"> 的值解析为“本地 00:00:00”的 Date
-        function parseLocalDateInput(id) {
-            const el = document.getElementById(id);
-            if (!el || !el.value) return null;
-            const [y, m, d] = el.value.split('-').map(Number);
-            return new Date(y, m - 1, d);
-        }
+            // HTML <input type="date"> 的值解析为“本地 00:00:00”的 Date
+            function parseLocalDateInput(id) {
+                const el = document.getElementById(id);
+                if (!el || !el.value) return null;
+                const [y, m, d] = el.value.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
 
 
         // 格式化金额（带货币换算）
@@ -2117,7 +2088,7 @@
             });
         }
 
-
+        
         function renderTrashList() {
             const trashList = document.getElementById('trashList');
             const trash = Array.isArray(vipManager.trash) ? vipManager.trash : [];
@@ -2133,29 +2104,29 @@
                 const label = u.phone ? u.phone : `尾号 ${u.tail || ''}`;
                 const when = u._deletedAt ? new Date(u._deletedAt).toLocaleString() : '';
                 return `
-                      <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center justify-between gap-3">
-                          <div class="min-w-0">
-                            <div class="font-medium text-gray-800 dark:text-light truncate">${label}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">删除时间：${when}</div>
-                          </div>
-
-                          <div class="flex items-center gap-2 flex-shrink-0">
-                            <button
-                              class="restore-trash-btn bg-success hover:bg-success/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
-                              data-idx="${idx}">
-                              恢复
-                            </button>
-                            <button
-                              class="purge-trash-btn bg-danger hover:bg-danger/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
-                              data-idx="${idx}">
-                              彻底删除
-                            </button>
-                            <div class="text-xs text-gray-400">#${idx + 1}</div>
-                          </div>
-                        </div>
+                  <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="font-medium text-gray-800 dark:text-light truncate">${label}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">删除时间：${when}</div>
                       </div>
-                    `;
+
+                      <div class="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          class="restore-trash-btn bg-success hover:bg-success/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
+                          data-idx="${idx}">
+                          恢复
+                        </button>
+                        <button
+                          class="purge-trash-btn bg-danger hover:bg-danger/90 text-white text-sm px-3 py-1.5 rounded-lg transition-all"
+                          data-idx="${idx}">
+                          彻底删除
+                        </button>
+                        <div class="text-xs text-gray-400">#${idx + 1}</div>
+                      </div>
+                    </div>
+                  </div>
+                `;
             }).join('');
 
             // ✅ 事件委托：恢复 / 彻底删除
@@ -2233,25 +2204,25 @@
                 const who = log.phone || log.userId || '';
 
                 return `
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex justify-between gap-3">
-                <div class="min-w-0">
-                    <div class="font-medium text-gray-800 dark:text-light">
-                        ${type}
-                    </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        ${time} ${who ? ' · ' + who : ''}
-                    </div>
-                    ${note ? `<div class="text-sm text-gray-700 dark:text-gray-300 mt-2">${note}</div>` : ''}
+        <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex justify-between gap-3">
+            <div class="min-w-0">
+                <div class="font-medium text-gray-800 dark:text-light">
+                    ${type}
                 </div>
-
-                <!-- ✅ 单条删除按钮 -->
-                <button
-                    class="delete-log-btn text-danger text-sm hover:text-danger/80"
-                    data-index="${idx}">
-                    删除
-                </button>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    ${time} ${who ? ' · ' + who : ''}
+                </div>
+                ${note ? `<div class="text-sm text-gray-700 dark:text-gray-300 mt-2">${note}</div>` : ''}
             </div>
-            `;
+
+            <!-- ✅ 单条删除按钮 -->
+            <button
+                class="delete-log-btn text-danger text-sm hover:text-danger/80"
+                data-index="${idx}">
+                删除
+            </button>
+        </div>
+        `;
             }).join('');
         }
 
@@ -2279,62 +2250,62 @@
             }
 
             card.innerHTML = `
-                    <div class="p-5">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <div class="flex items-center">
-                                    <div class="w-10 h-10 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
-                                        <i class="fa fa-user"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-light">${user.phone}</h3>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">尾号: ${user.tail}</p>
-                                    </div>
+                <div class="p-5">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-light">${user.phone}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">尾号: ${user.tail}</p>
                                 </div>
                             </div>
-                            <div class="flex space-x-1">
-                                <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors toggle-pin-btn" data-user-id="${user.id}">
-                                    ${pinIcon}
-                                </button>
-                                <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-300 transition-colors options-btn" data-user-id="${user.id}">
-                                    <i class="fa fa-ellipsis-v"></i>
-                                </button>
-                            </div>
                         </div>
-
-                        <div class="mt-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">当前余额</span>
-                                <span class="text-xl font-bold text-primary">${formatAmount(user.amount)}</span>
-                            </div>
-
-                            <div class="mt-4 flex space-x-2">
-                                <button class="flex-1 bg-success hover:bg-success/90 text-white py-2 rounded-lg transition-all add-amount-btn" data-user-id="${user.id}">
-                                    <i class="fa fa-plus mr-1"></i> 充值
-                                </button>
-                                <button class="flex-1 bg-danger hover:bg-danger/90 text-white py-2 rounded-lg transition-all subtract-amount-btn" data-user-id="${user.id}">
-                                    <i class="fa fa-minus mr-1"></i> 消费
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">最近操作</h4>
-                            <div class="space-y-2">
-                                ${user.history.slice(0, 2).map(record => `
-                                    <div class="flex items-center">
-                                        <div class="w-2 h-2 rounded-full ${record.type === 'add' ? 'bg-success' : 'bg-danger'} mr-2"></div>
-                                        <div class="flex-1">
-                                            <div class="text-sm text-gray-700 dark:text-gray-300">${getOperationText(record.type, record.amount)}</div>
-                                            ${record.description ? `<div class="history-note">${record.description}</div>` : ''}
-                                        </div>
-                                        <span class="text-xs text-gray-400">${formatDate(record.date)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
+                        <div class="flex space-x-1">
+                            <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors toggle-pin-btn" data-user-id="${user.id}">
+                                ${pinIcon}
+                            </button>
+                            <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-300 transition-colors options-btn" data-user-id="${user.id}">
+                                <i class="fa fa-ellipsis-v"></i>
+                            </button>
                         </div>
                     </div>
-                `;
+                    
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">当前余额</span>
+                            <span class="text-xl font-bold text-primary">${formatAmount(user.amount)}</span>
+                        </div>
+                        
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-success hover:bg-success/90 text-white py-2 rounded-lg transition-all add-amount-btn" data-user-id="${user.id}">
+                                <i class="fa fa-plus mr-1"></i> 充值
+                            </button>
+                            <button class="flex-1 bg-danger hover:bg-danger/90 text-white py-2 rounded-lg transition-all subtract-amount-btn" data-user-id="${user.id}">
+                                <i class="fa fa-minus mr-1"></i> 消费
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">最近操作</h4>
+                        <div class="space-y-2">
+                            ${user.history.slice(0, 2).map(record => `
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 rounded-full ${record.type === 'add' ? 'bg-success' : 'bg-danger'} mr-2"></div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-700 dark:text-gray-300">${getOperationText(record.type, record.amount)}</div>
+                                        ${record.description ? `<div class="history-note">${record.description}</div>` : ''}
+                                    </div>
+                                    <span class="text-xs text-gray-400">${formatDate(record.date)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
 
             // 添加点击事件
             card.addEventListener('click', (e) => {
@@ -2438,29 +2409,29 @@
             const icon = record.type === 'add' ? 'plus' : 'minus';
 
             item.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center flex-1">
-                            <div class="w-8 h-8 rounded-full ${iconClass} flex items-center justify-center mr-3 flex-shrink-0">
-                                <i class="fa fa-${icon}"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-light history-record">
-                                    ${getOperationText(record.type, record.amount)}
-                                </p>
-                                ${record.description ? `<p class="history-note truncate">${record.description}</p>` : ''}
-                                <p class="text-xs text-gray-500 dark:text-gray-400">${formatDate(record.date)}</p>
-                            </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center flex-1">
+                        <div class="w-8 h-8 rounded-full ${iconClass} flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fa fa-${icon}"></i>
                         </div>
-                        <div class="flex space-x-1 ml-2 action-buttons history-actions">
-                            <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-300 transition-colors edit-history-btn" data-history-id="${record.id}" title="编辑">
-                                <i class="fa fa-edit text-xs"></i>
-                            </button>
-                            <button class="p-1.5 rounded-full hover:bg-danger/10 text-danger transition-colors delete-history-btn" data-history-id="${record.id}" title="删除">
-                                <i class="fa fa-trash text-xs"></i>
-                            </button>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-light history-record">
+                                ${getOperationText(record.type, record.amount)}
+                            </p>
+                            ${record.description ? `<p class="history-note truncate">${record.description}</p>` : ''}
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${formatDate(record.date)}</p>
                         </div>
                     </div>
-                `;
+                    <div class="flex space-x-1 ml-2 action-buttons history-actions">
+                        <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-300 transition-colors edit-history-btn" data-history-id="${record.id}" title="编辑">
+                            <i class="fa fa-edit text-xs"></i>
+                        </button>
+                        <button class="p-1.5 rounded-full hover:bg-danger/10 text-danger transition-colors delete-history-btn" data-history-id="${record.id}" title="删除">
+                            <i class="fa fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
 
             // 添加编辑按钮事件
             item.querySelector('.edit-history-btn').addEventListener('click', (e) => {
@@ -2496,14 +2467,14 @@
                 item.href = '#';
                 item.className = 'flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors';
                 item.innerHTML = `
-                        <div class="w-8 h-8 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
-                            <i class="fa fa-user"></i>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-700 dark:text-light">${user.phone}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">余额: ${formatAmount(user.amount)}</p>
-                        </div>
-                    `;
+                    <div class="w-8 h-8 rounded-full ${user.pinned ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'} flex items-center justify-center">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700 dark:text-light">${user.phone}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">余额: ${formatAmount(user.amount)}</p>
+                    </div>
+                `;
 
                 item.addEventListener('click', () => {
                     currentUserId = user.id;
@@ -2590,7 +2561,7 @@
             });
             document.querySelector(`.theme-btn[data-theme="${theme}"]`).classList.add('ring-2', 'ring-primary');
 
-            // 重置备份状态显示
+                        // 重置备份状态显示
             const statusEl = document.getElementById('backupStatus');
             if (statusEl) {
                 statusEl.classList.add('hidden');
@@ -2601,7 +2572,7 @@
                 fileInput.value = '';
             }
 
-            settingsModal.classList.remove('hidden');
+settingsModal.classList.remove('hidden');
         }
 
         // 打开统计模态框
@@ -2634,122 +2605,122 @@
             }, 50);
         }
 
-        // 绘制充值/消费流水图表（图表只展示最近 7 天）
-        function drawConsumptionChart(startDate, endDate) {
-            const ctx = document.getElementById('consumptionChart').getContext('2d');
+    // 绘制充值/消费流水图表（图表只展示最近 7 天）
+    function drawConsumptionChart(startDate, endDate) {
+        const ctx = document.getElementById('consumptionChart').getContext('2d');
 
-            // 全量数据：用于表格
-            const flowData = vipManager.getConsumptionData(startDate, endDate);
+        // 全量数据：用于表格
+        const flowData = vipManager.getConsumptionData(startDate, endDate);
 
-            // 图表展示所选范围（最多 31 天）
-            const chartData = flowData;
+        // 图表展示所选范围（最多 31 天）
+        const chartData = flowData;
 
-            // 销毁现有图表（如果存在）
-            if (consumptionChart) {
-                consumptionChart.destroy();
-            }
+        // 销毁现有图表（如果存在）
+        if (consumptionChart) {
+            consumptionChart.destroy();
+        }
 
-            // 创建新图表：柱状(充值/消费) + 折线(期末余额)
-            consumptionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.map(item => item.date),
-                    datasets: [
-                        {
-                            type: 'bar',
-                            label: '消费金额',
-                            data: chartData.map(item => item.consumption),
-                            backgroundColor: '#F53F3F',
-                            borderColor: '#F53F3F',
-                            borderWidth: 1,
-                            yAxisID: 'y'
-                        },
-                        {
-                            type: 'bar',
-                            label: '充值金额',
-                            data: chartData.map(item => item.recharge),
-                            backgroundColor: '#00B42A',
-                            borderColor: '#00B42A',
-                            borderWidth: 1,
-                            yAxisID: 'y'
-                        },
-                        {
-                            type: 'line',
-                            label: '期末余额',
-                            data: chartData.map(item => item.closingBalance),
-                            borderColor: '#165DFF',
-                            backgroundColor: 'rgba(22, 93, 255, 0.12)',
-                            borderWidth: 2,
-                            pointRadius: 2,
-                            tension: 0.2,
-                            yAxisID: 'yBalance'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                            ticks: {
-                                callback: function (value) {
-                                    return formatAmount(value);
-                                }
+        // 创建新图表：柱状(充值/消费) + 折线(期末余额)
+        consumptionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(item => item.date),
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: '消费金额',
+                        data: chartData.map(item => item.consumption),
+                        backgroundColor: '#F53F3F',
+                        borderColor: '#F53F3F',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'bar',
+                        label: '充值金额',
+                        data: chartData.map(item => item.recharge),
+                        backgroundColor: '#00B42A',
+                        borderColor: '#00B42A',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'line',
+                        label: '期末余额',
+                        data: chartData.map(item => item.closingBalance),
+                        borderColor: '#165DFF',
+                        backgroundColor: 'rgba(22, 93, 255, 0.12)',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.2,
+                        yAxisID: 'yBalance'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: {
+                            callback: function (value) {
+                                return formatAmount(value);
                             }
-                        },
-                        yBalance: {
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            ticks: {
-                                callback: function (value) {
-                                    return formatAmount(value);
-                                }
-                            }
-                        },
-                        x: {
-                            grid: { display: false }
                         }
                     },
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return `${context.dataset.label}: ${formatAmount(context.raw)}`;
-                                }
+                    yBalance: {
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: function (value) {
+                                return formatAmount(value);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.dataset.label}: ${formatAmount(context.raw)}`;
                             }
                         }
                     }
                 }
-            });
+            }
+        });
 
-            // 强制更新图表尺寸
-            setTimeout(() => {
-                if (consumptionChart) consumptionChart.update();
-            }, 100);
+        // 强制更新图表尺寸
+        setTimeout(() => {
+            if (consumptionChart) consumptionChart.update();
+        }, 100);
 
-            // 更新表格数据（表格用“全量数据”，不强制 7 天）
-            const tableBody = document.getElementById('statsTableBody');
-            tableBody.innerHTML = '';
+        // 更新表格数据（表格用“全量数据”，不强制 7 天）
+        const tableBody = document.getElementById('statsTableBody');
+        tableBody.innerHTML = '';
 
-            flowData.forEach(item => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-                row.innerHTML = `
-                <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${item.date}</td>
-                <td class="py-3 px-4 text-sm text-right text-gray-700 dark:text-gray-300">${formatAmount(item.openingBalance)}</td>
-                <td class="py-3 px-4 text-sm text-right text-success">${formatAmount(item.recharge)}</td>
-                <td class="py-3 px-4 text-sm text-right text-danger">${formatAmount(item.consumption)}</td>
-                <td class="py-3 px-4 text-sm text-right text-gray-700 dark:text-gray-300">${formatAmount(item.closingBalance)}</td>
-                <td class="py-3 px-4 text-sm text-right font-medium ${item.netChange >= 0 ? 'text-success' : 'text-danger'}">
-                    ${item.netChange >= 0 ? '+' : ''}${formatAmount(item.netChange)}
-                </td>
-            `;
-                tableBody.appendChild(row);
-            });
-        }
+        flowData.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+            row.innerHTML = `
+            <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${item.date}</td>
+            <td class="py-3 px-4 text-sm text-right text-gray-700 dark:text-gray-300">${formatAmount(item.openingBalance)}</td>
+            <td class="py-3 px-4 text-sm text-right text-success">${formatAmount(item.recharge)}</td>
+            <td class="py-3 px-4 text-sm text-right text-danger">${formatAmount(item.consumption)}</td>
+            <td class="py-3 px-4 text-sm text-right text-gray-700 dark:text-gray-300">${formatAmount(item.closingBalance)}</td>
+            <td class="py-3 px-4 text-sm text-right font-medium ${item.netChange >= 0 ? 'text-success' : 'text-danger'}">
+                ${item.netChange >= 0 ? '+' : ''}${formatAmount(item.netChange)}
+            </td>
+        `;
+            tableBody.appendChild(row);
+        });
+    }
 
 
         // 切换用户置顶状态
@@ -2832,25 +2803,25 @@
         }
 
         // ✅ 4.1 规范化导入数据（非常重要）
-        function normalizeImportPayload(raw) {
-            if (!raw || typeof raw !== 'object') {
+            function normalizeImportPayload(raw) {
+                if (!raw || typeof raw !== 'object') {
+                    return {
+                        users: {},
+                        recentViewed: [],
+                        trash: [],
+                        logs: [],
+                        settings: {}
+                    };
+                }
+
                 return {
-                    users: {},
-                    recentViewed: [],
-                    trash: [],
-                    logs: [],
-                    settings: {}
+                    users: raw.data?.users || {},
+                    recentViewed: raw.data?.recentViewed || [],
+                    trash: raw.data?.trash || [],
+                    logs: raw.data?.logs || [],
+                    settings: raw.settings || {}
                 };
             }
-
-            return {
-                users: raw.data?.users || {},
-                recentViewed: raw.data?.recentViewed || [],
-                trash: raw.data?.trash || [],
-                logs: raw.data?.logs || [],
-                settings: raw.settings || {}
-            };
-        }
 
         function setBackupStatus(message, isError = false) {
             const el = document.getElementById('backupStatus');
@@ -2869,27 +2840,27 @@
         }
 
         function setStatsStatus(message, isError = false) {
-            const el = document.getElementById('statsStatus');
-            if (!el) return;
+                const el = document.getElementById('statsStatus');
+                if (!el) return;
 
-            if (!message) {
-                el.textContent = '';
-                el.classList.add('hidden');
-                return;
+                if (!message) {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                    return;
+                }
+
+                el.textContent = message;
+                el.classList.remove('hidden');
+
+                // 清理颜色
+                el.classList.remove('text-gray-500', 'dark:text-gray-400', 'text-red-600', 'dark:text-red-400');
+
+                if (isError) {
+                    el.classList.add('text-red-600', 'dark:text-red-400');
+                } else {
+                    el.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
             }
-
-            el.textContent = message;
-            el.classList.remove('hidden');
-
-            // 清理颜色
-            el.classList.remove('text-gray-500', 'dark:text-gray-400', 'text-red-600', 'dark:text-red-400');
-
-            if (isError) {
-                el.classList.add('text-red-600', 'dark:text-red-400');
-            } else {
-                el.classList.add('text-gray-500', 'dark:text-gray-400');
-            }
-        }
 
         function sanitizeUsers(usersObj) {
             const safeUsers = {};
@@ -3023,7 +2994,7 @@
 
 
 
-
+        
         // ==========================
         // Supabase Auth / 云端同步
         // ==========================
@@ -3116,42 +3087,46 @@
         }
 
         // 登录后初始化逻辑（改进版的 bootForUser）
-        async function bootForUser(user) {
-            // 预清理上次登录用户的缓存（防止数据残留）
-            vipManager.users = {};
-            vipManager.recentViewed = [];
-            vipManager.trash = [];
-            vipManager.logs = [];
-            vipManager._dirtyUpserts.clear();
-            vipManager._dirtyDeletes.clear();
-            vipManager._outboxMap.clear();
-            vipManager._outboxDeletedKeys.clear();
+            async function bootForUser(user) {
+                // 预清理上次登录用户的缓存（防止数据残留）
+                vipManager.users = {};
+                vipManager.recentViewed = [];
+                vipManager.trash = [];
+                vipManager.logs = [];
+                vipManager._dirtyUpserts.clear();
+                vipManager._dirtyDeletes.clear();
+                vipManager._outboxMap.clear();
+                vipManager._outboxDeletedKeys.clear();
 
-            // 初始化本地 IndexedDB（关闭旧库，打开新的 vip_manager_<user.id>）
-            try {
-                await vipManager.init(user.id);
-            } catch (e) {
-                console.error('本地数据库初始化失败:', e);
-                setAuthMsg('本地数据库初始化失败：' + e.message);
-                showAuthOverlay();
-                return;
+                // ✅ 切换账号/会话后重新探测云端表字段能力（避免缓存导致 SDK 报错）
+                try { __vipUsersCapsCache = null; } catch (_) { }
+
+
+                // 初始化本地 IndexedDB（关闭旧库，打开新的 vip_manager_<user.id>）
+                try {
+                    await vipManager.init(user.id);
+                } catch (e) {
+                    console.error('本地数据库初始化失败:', e);
+                    setAuthMsg('本地数据库初始化失败：' + e.message);
+                    showAuthOverlay();
+                    return;
+                }
+
+                // 设置登录用户状态
+                authedUser = user;
+                setAuthEmailLabel(user.email || user.id || '已登录');
+
+                // 刷新界面
+                renderUserList();
+                renderRecentUsers();
+                renderTrashList();
+                if (typeof renderLogsList === 'function') renderLogsList();
+                hideAuthOverlay();
+
+                // 应用云端同步设置并立即尝试拉取
+                try { await applyCloudSyncSettings(false); } catch (_) { }
+                try { schedulePull('startup'); } catch (_) { }
             }
-
-            // 设置登录用户状态
-            authedUser = user;
-            setAuthEmailLabel(user.email || user.id || '已登录');
-
-            // 刷新界面
-            renderUserList();
-            renderRecentUsers();
-            renderTrashList();
-            if (typeof renderLogsList === 'function') renderLogsList();
-            hideAuthOverlay();
-
-            // 应用云端同步设置并立即尝试拉取
-            try { await applyCloudSyncSettings(false); } catch (_) { }
-            try { schedulePull('startup'); } catch (_) { }
-        }
 
 
         async function initAuthUI() {
@@ -3281,6 +3256,8 @@
 
                 // 清空登录状态
                 authedUser = null;
+                try { __vipUsersCapsCache = null; } catch (_) { }
+
                 setAuthEmailLabel('未登录');
                 setSyncStatus('');
 
@@ -3332,9 +3309,9 @@
                 }
                 if (event === 'SIGNED_OUT') {
                     authedUser = null;
-                    try { stopAutoPull(); } catch (_) { }
-                    try { await stopRealtime(); } catch (_) { }
-                    try { setSyncStatus(''); } catch (_) { }
+                    try { stopAutoPull(); } catch (_) {}
+                    try { await stopRealtime(); } catch (_) {}
+                    try { setSyncStatus(''); } catch (_) {}
                     setAuthEmailLabel('未登录');
                     showAuthOverlay();
                 }
@@ -3343,8 +3320,8 @@
 
         let __vipUsersCapsCache = null;
 
-        // 探测云端表是否存在可选字段（不存在则自动回退到“全量 pull”）
-        async function getVipUsersCaps() {
+// 探测云端表是否存在可选字段（不存在则自动回退到“全量 pull”）
+async function getVipUsersCaps() {
             if (__vipUsersCapsCache) return __vipUsersCapsCache;
 
             const caps = { updated_at: false, op_ts: false };
@@ -3388,7 +3365,7 @@
                 if (!supabaseClient || !authedUser) return;
 
                 // 不依赖 navigator.onLine（某些手机 WebView 不准）；失败会在 syncNow 里捕获
-                try { setSyncStatus('已记录本地变更，准备同步…'); } catch (_) { }
+                try { setSyncStatus('已记录本地变更，准备同步…'); } catch (_) {}
 
                 // 合并短时间内的多次操作：尽量“改完就同步”，同时避免疯狂触发
                 clearTimeout(__autoSyncTimer);
@@ -3400,13 +3377,13 @@
                         __autoSyncTimer = setTimeout(run, 220);
                         return;
                     }
-                    try { await syncNow(); } catch (_) { }
+                    try { await syncNow(); } catch (_) {}
 
                     // 如果同步期间又产生了新 outbox，继续把队列排空
                     try {
                         const pending = vipManager?.getOutboxOps?.() || [];
                         if (pending.length) scheduleAutoSync('drain');
-                    } catch (_) { }
+                    } catch (_) {}
                 };
 
                 __autoSyncTimer = setTimeout(() => {
@@ -3414,7 +3391,7 @@
                     if (reqId !== window.__autoSyncReqId) return;
                     run();
                 }, 80);
-            } catch (_) { }
+            } catch (_) {}
         }
         window.scheduleAutoSync = scheduleAutoSync;
 
@@ -3450,7 +3427,7 @@
         function schedulePull(reason = '') {
             try {
                 if (!supabaseClient || !authedUser) return;
-                if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+                // ✅ 不依赖 navigator.onLine（某些手机 WebView 不准）；失败会在 syncNow 里捕获
                 clearTimeout(__pullDebounceTimer);
                 __pullDebounceTimer = setTimeout(async () => {
                     if (__isSyncing) return;
@@ -3549,22 +3526,42 @@
         window.applyCloudSyncSettings = applyCloudSyncSettings;
 
 
-        async function syncNow() {
+async function syncNow() {
             if (!supabaseClient || !authedUser) {
                 setSyncStatus('未登录，无法同步。');
                 return;
             }
 
 
+            // ✅ 每次同步前确认会话仍有效（多端登录/长时间挂起后，避免 token 失效导致 SDK 报错）
+            try {
+                const { data: sessData, error: sessErr } = await supabaseClient.auth.getSession();
+                if (sessErr) throw sessErr;
+                const sessUser = sessData?.session?.user || null;
+                if (!sessUser) {
+                    setSyncStatus('会话已失效，请重新登录后再同步。');
+                    try { showAuthOverlay(); } catch (_) { }
+                    return;
+                }
+                if (authedUser?.id && sessUser?.id && authedUser.id !== sessUser.id) {
+                    // 本地记录的用户与当前会话不一致：自动切换到当前会话用户
+                    await bootForUser(sessUser);
+                    return;
+                }
+            } catch (e) {
+                console.warn('[sync session]', e);
+                // 不强制中断：后续请求若失败会进入 catch 并给出提示
+            }
+
             if (__isSyncing) {
                 setSyncStatus('同步中…');
                 return;
             }
             __isSyncing = true;
-            setSyncStatus('同步中…');
+setSyncStatus('同步中…');
 
             // 先把本地变更落盘（确保 outbox 完整）
-            try { await vipManager.flushNow(); } catch (_) { }
+            try { await vipManager.flushNow(); } catch (_) {}
 
             const clone = (obj) => {
                 try { return (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); }
@@ -3703,9 +3700,24 @@
                         (cloudMeta || []).forEach(r => metaMap[r.key] = r.value);
 
                         // 云端为主（没有则保留本地）
-                        vipManager.recentViewed = metaMap.recentViewed || vipManager.recentViewed || [];
-                        vipManager.trash = metaMap.trash || vipManager.trash || [];
-                        vipManager.logs = metaMap.logs || vipManager.logs || [];
+                        // 云端为主（没有则保留本地）；并兼容 value 被存成字符串(JSON)的情况
+                        const __normMeta = (v, fallback) => {
+                            if (v === undefined || v === null) return fallback;
+                            if (typeof v === 'string') {
+                                try { return JSON.parse(v); } catch (_) { return fallback; }
+                            }
+                            return v;
+                        };
+
+                        vipManager.recentViewed = __normMeta(metaMap.recentViewed, vipManager.recentViewed || []);
+                        vipManager.trash = __normMeta(metaMap.trash, vipManager.trash || []);
+                        vipManager.logs = __normMeta(metaMap.logs, vipManager.logs || []);
+
+                        // 类型兜底：防止表结构/历史数据把数组变成对象/字符串导致 UI 异常
+                        if (!Array.isArray(vipManager.recentViewed)) vipManager.recentViewed = [];
+                        if (!Array.isArray(vipManager.trash)) vipManager.trash = [];
+                        if (!Array.isArray(vipManager.logs)) vipManager.logs = [];
+
                     }
                 } catch (e) {
                     console.warn('[pull meta]', e);
@@ -3749,10 +3761,25 @@
             } catch (e) {
                 console.error(e);
                 setSyncStatus('同步失败：' + (e?.message || e));
-            }
+                // ✅ 常见会话/鉴权错误：自动退回登录界面，避免用户只能“清空浏览器数据”才能恢复
+                try {
+                    const __msg = String(e?.message || e || '');
+                    const __low = __msg.toLowerCase();
+                    if (__low.includes('jwt') || __low.includes('token') || __low.includes('unauthoriz') || __low.includes('forbidden') || __low.includes('session') || __low.includes('refresh')) {
+                        try { await supabaseClient?.auth?.signOut?.(); } catch (_) { }
+                        authedUser = null;
+                        try { stopAutoPull(); } catch (_) { }
+                        try { await stopRealtime(); } catch (_) { }
+                        setAuthEmailLabel('未登录');
+                        try { setAuthMsg('会话可能已失效，请重新登录后再试。\n' + __msg); } catch (_) { }
+                        try { showAuthOverlay(); } catch (_) { }
+                    }
+                } catch (_) { }
 
+            }
+        
             __isSyncing = false;
-        }
+}
 
 
 
@@ -4328,7 +4355,7 @@
                 // ✅ 清空最近浏览也要触发云端 meta 同步（vip_meta）
                 window.scheduleAutoSync?.('clear_recent');
             });
-
+        
 
             // 数据导入导出（设置页）
             const exportBtn = document.getElementById('exportDataBtn');
@@ -4352,7 +4379,7 @@
                 importBtn.addEventListener('click', () => {
                     importInput.click();
                 });
-                //-----------------------------------------------------------
+//-----------------------------------------------------------
 
                 document.getElementById('logsList').addEventListener('click', (e) => {
                     const btn = e.target.closest('.delete-log-btn');
@@ -4479,7 +4506,7 @@
                     });
                 }
             }
-        });
+});
     </script>
 </body>
 
