@@ -1252,7 +1252,7 @@
                     // 3) meta：小数据，直接覆盖即可
                     await this.db.meta.put({ key: 'recentViewed', value: this.recentViewed });
                     await this.db.meta.put({ key: 'trash', value: this.trash });
-                    await this.db.meta.put({ key: 'logs', value: this.logs });
+                    await this.db.meta.put({ key: 'logs', value: this.logs });  // 确保日志数据保存
                     await this.db.meta.put({ key: 'sync_state', value: this._syncState });
                 });
 
@@ -1261,6 +1261,7 @@
                 this._dirtyDeletes.clear();
                 this._outboxDeletedKeys.clear();
             }
+
 
 // 立即落盘（用于“同步前先把 outbox 写进去”）
 async flushNow() {
@@ -1462,12 +1463,17 @@ applyRemoteRows(rows) {
                     at: Date.now(),
                     ...entry
                 });
+
                 // 可选：限制长度，避免无限增长
                 this.logs = this.logs.slice(0, 500);
-                this.saveData();
+
+                // 确保每次都立即保存日志到数据库
+                this.saveData();  // 确保数据写入数据库
+
                 // ✅ meta 也需要自动同步（否则只改日志时要等别的操作才会上云）
                 window.scheduleAutoSync?.('logs');
             }
+
     
             clearLogs() {
                 this.logs = [];
