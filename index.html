@@ -3428,12 +3428,12 @@ async function getVipUsersCaps() {
 
         function getCloudSyncSettings() {
             const autoPullEnabled = (localStorage.getItem('cloud_autoPullEnabled') ?? '1') === '1';
-            const autoPullIntervalSec = parseInt(localStorage.getItem('cloud_autoPullIntervalSec') || '30', 10);
+            const autoPullIntervalSec = parseInt(localStorage.getItem('cloud_autoPullIntervalSec') || '5', 10);
             const pullOnFocus = (localStorage.getItem('cloud_pullOnFocus') ?? '1') === '1';
-            const realtimeEnabled = (localStorage.getItem('cloud_realtimeEnabled') ?? '0') === '1';
+            const realtimeEnabled = (localStorage.getItem('cloud_realtimeEnabled') ?? '1') === '1';
             return {
                 autoPullEnabled,
-                autoPullIntervalSec: Number.isFinite(autoPullIntervalSec) ? autoPullIntervalSec : 30,
+                autoPullIntervalSec: Number.isFinite(autoPullIntervalSec) ? autoPullIntervalSec : 5,
                 pullOnFocus,
                 realtimeEnabled,
             };
@@ -3442,7 +3442,7 @@ async function getVipUsersCaps() {
         function setCloudSyncSettings(next) {
             const s = { ...getCloudSyncSettings(), ...(next || {}) };
             localStorage.setItem('cloud_autoPullEnabled', s.autoPullEnabled ? '1' : '0');
-            localStorage.setItem('cloud_autoPullIntervalSec', String(s.autoPullIntervalSec || 30));
+            localStorage.setItem('cloud_autoPullIntervalSec', String(s.autoPullIntervalSec || 5));
             localStorage.setItem('cloud_pullOnFocus', s.pullOnFocus ? '1' : '0');
             localStorage.setItem('cloud_realtimeEnabled', s.realtimeEnabled ? '1' : '0');
             return s;
@@ -3456,7 +3456,7 @@ async function getVipUsersCaps() {
                 __pullDebounceTimer = setTimeout(async () => {
                     if (__isSyncing) return;
                     try { await syncNow(); } catch (_) { }
-                }, 350);
+                }, 120);
             } catch (_) { }
         }
         window.schedulePull = schedulePull;
@@ -3471,7 +3471,7 @@ async function getVipUsersCaps() {
         function startAutoPull(intervalSec = 30) {
             stopAutoPull();
             if (!supabaseClient || !authedUser) return;
-            const sec = Math.max(10, parseInt(intervalSec || 30, 10) || 30);
+            const sec = Math.max(3, parseInt(intervalSec || 5, 10) || 5);
             __autoPullIntervalId = setInterval(() => {
                 schedulePull('interval');
             }, sec * 1000);
@@ -3491,19 +3491,31 @@ async function getVipUsersCaps() {
             if (__realtimeChannel) return; // 已启动
             try {
                 __realtimeChannel = supabaseClient
-                    .channel(`vip_users_changes_${authedUser.id}`)
+                    .channel(`vip_changes_${authedUser.id}`)
+                    // 用户数据（含 deleted/purged 回收站标记）
                     .on(
                         'postgres_changes',
                         { event: '*', schema: 'public', table: 'vip_users', filter: `owner_id=eq.${authedUser.id}` },
                         (_payload) => {
-                            // 为了简单稳妥：收到变更就触发一次拉取（会自动增量）
-                            schedulePull('realtime');
+                            // 收到变更就触发一次拉取（会自动增量）
+                            schedulePull('realtime:vip_users');
+                        }
+                    )
+                    // 元数据（logs / recentViewed 等）
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'vip_meta', filter: `owner_id=eq.${authedUser.id}` },
+                        (_payload) => {
+                            schedulePull('realtime:vip_meta');
                         }
                     )
                     .subscribe((status) => {
                         // status: SUBSCRIBED / TIMED_OUT / CLOSED / CHANNEL_ERROR
                         if (status === 'SUBSCRIBED') {
-                            setSyncStatus('Realtime 已连接：云端变更将自动拉取。');
+                            setSyncStatus('Realtime 已连接：云端变更将自动拉取（秒级同步）。');
+                        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                            // WebSocket 受限/弱网时：仍可用轮询兜底
+                            setSyncStatus('Realtime 连接不稳定，将使用轮询兜底（可在设置里调短间隔）。');
                         }
                     });
             } catch (e) {
@@ -3525,7 +3537,7 @@ async function getVipUsersCaps() {
             if (fromUI && elAutoPull && elInterval && elFocus && elRealtime) {
                 s = setCloudSyncSettings({
                     autoPullEnabled: !!elAutoPull.checked,
-                    autoPullIntervalSec: parseInt(elInterval.value || '30', 10) || 30,
+                    autoPullIntervalSec: parseInt(elInterval.value || '5', 10) || 5,
                     pullOnFocus: !!elFocus.checked,
                     realtimeEnabled: !!elRealtime.checked,
                 });
