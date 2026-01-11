@@ -179,8 +179,17 @@
 
 <body class="font-inter bg-gray-50 dark:bg-darker min-h-screen flex flex-col overflow-x-hidden">
     <!-- 登录 / Supabase 配置遮罩层 -->
-    <div id="authOverlay" class="fixed inset-0 z-[999] bg-black/60 hidden items-center justify-center">
-        <div class="bg-white dark:bg-dark w-full max-w-lg rounded-2xl shadow-2xl p-6 mx-4">
+    <div id="authOverlay" class="fixed inset-0 z-[999] bg-black/60 hidden
+             items-start justify-start
+             overflow-y-auto overscroll-contain
+             px-4 py-6
+             sm:items-center sm:justify-center sm:overflow-y-hidden sm:px-0 sm:py-0">
+
+        <div class="bg-white dark:bg-dark w-full max-w-lg rounded-2xl shadow-2xl
+                        p-4 sm:p-6 mx-auto
+                        max-h-[88vh] overflow-y-auto
+                        sm:max-h-none sm:overflow-visible">
+
             <div class="flex items-start justify-between">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-light">登录以启用多用户与云端同步</h2>
@@ -3632,8 +3641,9 @@
                         .upsert(metaRows, { onConflict: 'owner_id,key' });
                     if (error) throw error;
                 } catch (e) {
-                    // meta 同步失败不阻断 users
+                    // meta 同步失败不阻断 users，但给出可见提示，方便排查表结构/唯一约束
                     console.warn('[sync meta]', e);
+                    setSyncStatus(`vip_meta 同步失败：${e?.message || e}`);
                 }
 
                 // 2) pull：优先增量（若云端无 op_ts/updated_at，则回退全量）
@@ -4315,6 +4325,8 @@
                 vipManager.recentViewed = [];
                 vipManager.saveData();
                 renderRecentUsers();
+                // ✅ 清空最近浏览也要触发云端 meta 同步（vip_meta）
+                window.scheduleAutoSync?.('clear_recent');
             });
 
 
@@ -4355,6 +4367,8 @@
                     vipManager.logs.splice(idx, 1);
                     vipManager.saveData();
                     renderLogsList();
+                    // ✅ 删除单条日志也要触发云端 meta 同步（vip_meta）
+                    window.scheduleAutoSync?.('delete_log');
                 });
 
                 const logTypeFilter = document.getElementById('logTypeFilter');
